@@ -70,6 +70,7 @@ def select_table():
 
 
 if __name__ == '__main__':
+    
     delete_table()
     create_table()
     insert_data()
