@@ -1,0 +1,35 @@
+version: '3'
+services:
+  # mongodb:
+  #   image: mongo
+  #   ports:
+  #     - 27017:27017
+  #   volumes:
+  #     - mongodb_data:/data/db
+
+  mysql:
+    image: mysql
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_DATABASE=myqsl_database
+      - MYSQL_USER=dbuser
+      - MYSQL_PASSWORD=secret
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # neo4j:
+  #   image: neo4j
+  #   ports:
+  #     - 7474:7474
+  #     - 7687:7687
+  #   environment:
+  #     - NEO4J_AUTH=neo4j/your_neo4j_password
+  #   volumes:
+  #     - neo4j_data:/data
+
+volumes:
+  # mongodb_data:
+  mysql_data:
+  # neo4j_data:
