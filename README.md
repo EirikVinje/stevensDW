@@ -4,7 +4,7 @@ The stevens datawarehouse
 ## dependencies
 - sudo apt install docker-compose
 - pip install -r requirements.txt
-- dataset from eiriks flashdrive
+- terrorist dataset in csv
 
 ## container commands 
 - sudo docker-compose up -d (runs the containers)
