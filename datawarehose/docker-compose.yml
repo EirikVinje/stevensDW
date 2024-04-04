@@ -1,11 +1,13 @@
 version: '3'
 services:
-  # mongodb:
-  #   image: mongo
-  #   ports:
-  #     - 27017:27017
-  #   volumes:
-  #     - mongodb_data:/data/db
+  mongodb:
+    image: mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=mongodb_database
 
   mysql:
     image: mysql
@@ -19,17 +21,17 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
-  # neo4j:
-  #   image: neo4j
-  #   ports:
-  #     - 7474:7474
-  #     - 7687:7687
-  #   environment:
-  #     - NEO4J_AUTH=neo4j/your_neo4j_password
-  #   volumes:
-  #     - neo4j_data:/data
+  neo4j:
+    image: neo4j
+    ports:
+      - 7474:7474
+      - 7687:7687
+    environment:
+      - NEO4J_AUTH=neo4j/password
+    volumes:
+      - neo4j_data:/data
 
 volumes:
-  # mongodb_data:
+  mongodb_data:
   mysql_data:
-  # neo4j_data:
+  neo4j_data:
