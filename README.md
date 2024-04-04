@@ -1,5 +1,4 @@
-# stevens_datawarehouse
-The stevens datawarehouse
+# The Stevens DataWareHouse
 
 ## dependencies
 - sudo apt install docker-compose
