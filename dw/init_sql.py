@@ -1,20 +1,28 @@
 # from typing import List
-import polars as pl
 from sqlalchemy import create_engine
 from sqlalchemy import text
+import polars as pl
+import json
 
-DB_USER = 'root'
-DB_PASSWORD = 'secret'
-DB_HOST = 'localhost' 
-DB_NAME = 'myqsl_database'
 
 class TerroristSQLDatabase:
 
-    def __init__(self, path, columns : list = None):
+    def __init__(self, path):
+
+        DB_USER = 'root'
+        DB_PASSWORD = 'secret'
+        DB_HOST = 'localhost' 
+        DB_NAME = 'myqsl_database'
 
         self.raw = pl.read_csv(path, infer_schema_length=0)
-        self.raw = self.raw.select(columns)    
         self.engine = create_engine(f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}")
+
+        self.columns = None
+        with open("columns.json", "rb") as f:
+            self.columns = json.load(f)
+
+        self.raw = self.raw[self.columns]
+
     
 
     def select_column(self, columns : list = None):
@@ -83,7 +91,7 @@ if __name__ == "__main__":
 
     path = "/home/eirik/data/terrorist_dataset/globalterrorismdb_0522dist.csv"
 
-    database = TerroristSQLDatabase(path, ["eventid", "iyear", "country_txt"])
+    database = TerroristSQLDatabase(path)
     columns = [("eventid", "INT"), ("iyear", "INT"), ("country_txt", "VARCHAR(255)")]
     table_name = "country_year"
 

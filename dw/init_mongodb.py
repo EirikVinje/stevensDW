@@ -1,14 +1,21 @@
 from pymongo import MongoClient
 import polars as pl
-
+import json
 
 
 class TerroristMongoDBDatabase:
 
     def __init__(self, path, columns : list[str] = None):
 
-        df = pl.read_csv(path, infer_schema_length=0)
-        self.raw = df.select(columns)
+        self.raw = pl.read_csv(path, infer_schema_length=0)
+
+        self.columns = None
+        with open("columns.json", "rb") as f:
+            self.columns = json.load(f)
+
+        self.raw = self.raw[self.columns]
+
+
 
     def create_collection(self, collection_name : str):
 
@@ -62,8 +69,8 @@ if __name__ == "__main__":
 
     path = "/home/eirik/data/terrorist_dataset/globalterrorismdb_0522dist.csv"
 
-    database = TerroristMongoDBDatabase(path, ["eventid", "iyear", "country_txt"])
+    database = TerroristMongoDBDatabase(path)
     
     # database.create_collection("country_year")
-    database.insert("country_year")
-    database.select("country_year")
+    # database.insert("country_year")
+    # database.select("country_year")
