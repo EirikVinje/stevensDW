@@ -81,7 +81,7 @@ class TerroristSQLDatabase:
 
 if __name__ == "__main__":
 
-    path = "/home/eirik/data/globalterrorismdb_0522dist.csv"
+    path = "/home/eirik/data/terrorist_dataset/globalterrorismdb_0522dist.csv"
 
     database = TerroristSQLDatabase(path, ["eventid", "iyear", "country_txt"])
     columns = [("eventid", "INT"), ("iyear", "INT"), ("country_txt", "VARCHAR(255)")]

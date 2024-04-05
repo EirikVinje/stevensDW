@@ -64,6 +64,6 @@ if __name__ == "__main__":
 
     database = TerroristMongoDBDatabase(path, ["eventid", "iyear", "country_txt"])
     
-    database.create_collection("country_year")
+    # database.create_collection("country_year")
     database.insert("country_year")
     database.select("country_year")

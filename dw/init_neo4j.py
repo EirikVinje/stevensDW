@@ -29,6 +29,10 @@ class TerroristNeo4JDatabase:
 
 
     def read(self):
+        
+        """
+        A method to read nodes from the graph database.
+        """
 
         driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
 
@@ -45,7 +49,7 @@ class TerroristNeo4JDatabase:
 
 if __name__ == "__main__":
 
-    path = "/home/eirik/data/globalterrorismdb_0522dist.csv"
+    path = "/home/eirik/data/terrorist_dataset/globalterrorismdb_0522dist.csv"
     columns = ["eventid", "iyear", "country_txt"]
     db = TerroristNeo4JDatabase(path, columns)
     db.insert()
