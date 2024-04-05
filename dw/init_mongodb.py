@@ -7,7 +7,7 @@ class TerroristMongoDBDatabase:
 
     def __init__(self, path, columns : list[str] = None):
 
-        df = pl.read_excel(path, infer_schema_length=0)
+        df = pl.read_csv(path, infer_schema_length=0)
         self.raw = df.select(columns)
 
     def create_collection(self, collection_name : str):
@@ -23,6 +23,9 @@ class TerroristMongoDBDatabase:
         client.close()
 
     def insert(self, collection_name : str):
+
+        client = MongoClient("mongodb://localhost:27017")
+        db = client["mongodb_database"]
 
         if collection_name not in db.list_collection_names():
             assert ValueError(f"Collection {collection_name} does not exist")
@@ -42,6 +45,9 @@ class TerroristMongoDBDatabase:
             
     def select(self, collection_name : str):
 
+        client = MongoClient("mongodb://localhost:27017")
+        db = client["mongodb_database"]
+
         if collection_name not in db.list_collection_names():
             assert ValueError(f"Collection {collection_name} does not exist")
 
@@ -54,7 +60,7 @@ class TerroristMongoDBDatabase:
 
 if __name__ == "__main__":
 
-    path = "/home/eirik/data/terrorist_dataset/globalterrorismdb_0522dist.xlsx"
+    path = "/home/eirik/data/terrorist_dataset/globalterrorismdb_0522dist.csv"
 
     database = TerroristMongoDBDatabase(path, ["eventid", "iyear", "country_txt"])
     
