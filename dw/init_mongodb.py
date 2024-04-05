@@ -7,7 +7,7 @@ class TerroristMongoDBDatabase:
 
     def __init__(self, path, columns : list[str] = None):
 
-        df = pl.read_csv(path, infer_schema_length=0)
+        df = pl.read_excel(path, infer_schema_length=0)
         self.raw = df.select(columns)
 
     def create_collection(self, collection_name : str):
@@ -54,7 +54,7 @@ class TerroristMongoDBDatabase:
 
 if __name__ == "__main__":
 
-    path = "/home/eirik/data/globalterrorismdb_0522dist.csv"
+    path = "/home/eirik/data/terrorist_dataset/globalterrorismdb_0522dist.xlsx"
 
     database = TerroristMongoDBDatabase(path, ["eventid", "iyear", "country_txt"])
     
