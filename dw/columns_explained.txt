@@ -1,0 +1,47 @@
+    eventid: A unique identifier for each terrorist event.
+
+    iyear: The year in which the terrorist event occurred.
+
+    imonth: The month in which the terrorist event occurred.
+
+    iday: The day of the month on which the terrorist event occurred.
+
+    country: A numeric code representing the country in which the terrorist event occurred.
+
+    country_txt: The name of the country in which the terrorist event occurred.
+
+    region: A numeric code representing the region in which the terrorist event occurred.
+
+    region_txt: The name of the region in which the terrorist event occurred.
+
+    provstate: The name of the province or state in which the terrorist event occurred.
+
+    city: The name of the city in which the terrorist event occurred.
+
+    crit1, crit2, crit3: Binary indicators (0 or 1) representing whether certain criteria for defining terrorism are met. For example, crit1 might indicate whether the event's motive was political.
+
+    doubtterr: An indicator of whether there is doubt about the terrorism nature of the event.
+
+    success: An indicator of whether the terrorist attack was deemed successful (1 for yes, 0 for no).
+
+    suicide: An indicator of whether the attack involved a suicide component (1 for yes, 0 for no).
+
+    attacktype1: A numeric code representing the type of attack.
+
+    attacktype1_txt: The name of the type of attack.
+
+    targtype1: A numeric code representing the type of target.
+
+    targtype1_txt: The name of the type of target.
+
+    target1: The specific target of the attack.
+
+    gname: The name of the group responsible for the attack.
+
+    individual: An indicator of whether the attack was carried out by an individual (1 for yes, 0 for no).
+
+    nkill: The number of people killed in the attack.
+
+    nwound: The number of people wounded in the attack.
+
+    property: An indicator of whether property was damaged or destroyed in the attack (1 for yes, 0 for no).
