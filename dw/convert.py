@@ -1,16 +1,24 @@
+import polars as pl
 import pandas as pd
+import json
+import csv
 
-def xlsx_to_csv(input_file, output_file):
-    # Read the Excel file
-    df = pd.read_excel(input_file)
+
+def smaller(input_file, output_file):
     
-    # Write the DataFrame to a CSV file
-    df.to_csv(output_file, index=False)
+    df = pl.read_csv(input_file, infer_schema_length=0)
+    
+    with open("columns.json", "rb") as f:
+            columns = json.load(f)["columns"]
+
+    df = df[columns]
+
+    df.write_csv(output_file)    
 
 
 if __name__ == "__main__":
 
-    inputfile = "/home/eirik/data/terrorist_dataset/globalterrorismdb_0522dist.xlsx"
-    outputfile = "/home/eirik/data/terrorist_dataset/globalterrorismdb_0522dist.csv"
+    inputfile = "/home/eirik/data/terrorist_dataset/globalterrorismdb_0522dist.csv"
+    outputfile = "/home/eirik/projects/stevensDW/data/globalterrorismdb_0522dist.csv"
 
-    xlsx_to_csv(inputfile, outputfile)
+    smaller(inputfile, outputfile)

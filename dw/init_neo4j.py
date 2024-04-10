@@ -1,8 +1,11 @@
-from neo4j import GraphDatabase
-# from py2neo import Graph, Node
-import polars as pl
 import json
 import sys
+
+from neo4j import GraphDatabase
+from tqdm import tqdm
+import polars as pl
+import concurrent.futures as cf
+
 
 class TerroristNeo4JDatabase:
 
@@ -20,8 +23,10 @@ class TerroristNeo4JDatabase:
 
         self.raw = self.raw[self.columns]
 
-        self.max_reads = 10
+        self.max_reads = 5000
 
+        self.driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
+        
 
     def insert_country_nodes(self):
 
@@ -31,7 +36,7 @@ class TerroristNeo4JDatabase:
 
         with driver.session() as session:
             
-            for i in range(self.raw.shape[0]):
+            for i in tqdm(range(self.raw.shape[0])):
                 
                 if i == self.max_reads:
                     break
@@ -59,7 +64,15 @@ class TerroristNeo4JDatabase:
 
         querydict = "{"
         for key, value in zip(columns, values):
-            querydict += f"{key} : '{value}', "
+            
+            if value is None:
+                querydict += f"{key} : 'None', "
+
+            elif value is not None:
+                value = value.replace('&', 'and')
+                value = value.replace("'", "")
+                querydict += f"{key} : '{value}', "
+        
         querydict = querydict[:-2] + "}"
         
         query = f"CREATE (n:{node} {querydict})"
@@ -83,11 +96,38 @@ class TerroristNeo4JDatabase:
 
         driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
 
-        columns = ["eventid", "iyear", "region", "region_txt", "provstate", "country", "country_txt"]
+        columns = [
+            "eventid",
+            "iyear",
+            "imonth",
+            "iday",
+            "country",
+            "country_txt",
+            "region",
+            "region_txt",
+            "provstate",
+            "city",
+            "crit1",
+            "crit2",
+            "crit3",
+            "doubtterr",
+            "success",
+            "suicide",
+            "attacktype1",
+            "attacktype1_txt",
+            "targtype1",
+            "targtype1_txt",
+            "target1",
+            "gname",
+            "individual",
+            "nkill",
+            "nwound",
+            "property"
+            ]
 
         with driver.session() as session:
             
-            for i in range(self.raw.shape[0]):
+            for i in tqdm(range(self.raw.shape[0])):
                 
                 if i == self.max_reads:
                     break
@@ -107,12 +147,11 @@ class TerroristNeo4JDatabase:
             
             country_ids = session.run("MATCH (c:Country) RETURN c.country").values()
 
-            for idx in country_ids:    
+            for idx in tqdm(country_ids):    
 
                 query = self._match_query("Country", "Event", "country", "country", "HAS_EVENT", idx[0])
                 session.run(query)
                 
-
         driver.close()
 
 
@@ -128,9 +167,40 @@ class TerroristNeo4JDatabase:
         driver.close()
         
 
+    def insert_one(self, session, row : pl.DataFrame, countries : list, events : list):
+
+        if int(row["country"][0]) not in countries:
+            countries.append(int(row["country"][0]))
+            query = self._create_query("Country", ["country", "country_txt"], row)
+            session.run(query)
+
+        if int(row["eventid"][0]) not in events:
+            events.append(int(row["eventid"][0]))
+            query = self._create_query("Event", ["eventid", "iyear", "country", "country_txt", "region", "region_txt", "provstate", "city", "crit1", "crit2", "crit3", "doubtterr", "success", "suicide", "attacktype1", "attacktype1_txt", "targtype1", "targtype1_txt", "target1", "gname", "individual", "nkill", "nwound", "property"], row)
+            session.run(query)
+            
+
+    def insert_all(self):
+
+        countries = []
+        events = []
+        with self.driver.session() as session:
+            
+            with cf.ThreadPoolExecutor(max_workers=10) as executor:
+                
+                for i in tqdm(range(self.raw.shape[0])):
+                    
+                    if i == self.max_reads:
+                        break
+                    
+                    executor.submit(self.insert_one, session, self.raw[i], countries, events)
+                
+        self.driver.close()
+
+
 if __name__ == "__main__":
 
-    path = "/home/eirik/data/globalterrorismdb_0522dist.csv"
+    path = "/home/eirik/projects/stevensDW/data/globalterrorismdb_0522dist.csv"
     db = TerroristNeo4JDatabase(path)
     
     args = sys.argv[-1]
@@ -144,5 +214,8 @@ if __name__ == "__main__":
     elif args == "d":
         db.delete_all()
     
-    elif args == "r":
+    elif args == "ir":
         db.create_relationships()
+
+    elif args == "ia":
+        db.insert_all()

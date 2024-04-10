@@ -11,7 +11,7 @@ class TerroristMongoDBDatabase:
 
         self.columns = None
         with open("columns.json", "rb") as f:
-            self.columns = json.load(f)
+            self.columns = json.load(f)["columns"]
 
         self.raw = self.raw[self.columns]
 
@@ -73,4 +73,4 @@ if __name__ == "__main__":
     
     # database.create_collection("country_year")
     # database.insert("country_year")
-    # database.select("country_year")
+    database.select("country_year")
