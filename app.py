@@ -1,16 +1,15 @@
 from dash import Dash, html, dcc, Input, Output, callback
 import dash
-# import dash_mantine_components as dmc
-# import dash_bootstrap_components as dbc
+import dash_mantine_components as dmc
+import dash_bootstrap_components as dbc
 import os
-from flask import current_app
 from flask import current_app
 from flask_caching import Cache
 
-assets_path = os.getcwd() + '/dash_dependencies'
+assets_path = os.getcwd() + '/dash_dependencies/assets'
+pages_path = os.getcwd() + '/dash_dependencies/pages'
 
-
-app = Dash(__name__, use_pages=True, suppress_callback_exceptions=True, pages_folder=f"{assets_path}/pages", assets_folder=f'{assets_path}/pages')
+app = Dash(__name__, use_pages=True, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP], pages_folder=pages_path, assets_folder=assets_path)
 
 
 app.layout = html.Div([dash.page_container,
