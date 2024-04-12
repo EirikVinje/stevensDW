@@ -41,5 +41,6 @@ $ python populate_sql.py
 ## In browser, access databases
 
 - Neo4j : localhost:7474
-- MySql : localhost:
+- MySQL-odb : localhost:15000
+- MySQL-dw: localhost:25000
 - Mongodb : 
