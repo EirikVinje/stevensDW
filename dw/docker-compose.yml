@@ -1,5 +1,12 @@
 version: '3'
 services:
+  web-server:
+    image: php:7.4.3-apache
+    volumes:
+        - "./html/:/var/www/html/"
+    ports:
+        - "8080:80"
+
   mongodb:
     image: mongo
     ports:
@@ -8,18 +15,6 @@ services:
       - mongodb_data:/data/db
     environment:
       - MONGO_INITDB_DATABASE=mongodb_database
-
-  mysql:
-    image: mysql
-    ports:
-      - 3307:3307
-    environment:
-      - MYSQL_ROOT_PASSWORD=secret
-      - MYSQL_DATABASE=myqsl_database
-      - MYSQL_USER=dbuser
-      - MYSQL_PASSWORD=secret
-    volumes:
-      - mysql_data:/var/lib/mysql
 
   neo4j:
     image: neo4j
@@ -31,7 +26,42 @@ services:
     volumes:
       - neo4j_data:/data
 
+  mysql-odb-server:
+    image: mysql:8.0.19
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+    volumes:
+      - mysql-data:/var/lib/mysql_odb
+    ports:
+      - "13306:3306"
+      
+  mysql-dw-server:
+    image: mysql:8.0.19
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+    volumes:
+      - mysql-data:/var/lib/mysql_dw
+    ports:
+      - "23306:3306"
+
+  phpmyadmin-odb:
+    image: phpmyadmin/phpmyadmin:5.0.1
+    environment:
+      PMA_HOST: mysql-odb-server
+      PMA_USER: root
+      PMA_PASSWORD: secret
+    ports:
+        - "15000:80"
+        
+  phpmyadmin-dw:
+    image: phpmyadmin/phpmyadmin:5.0.1
+    environment:
+      PMA_HOST: mysql-dw-server
+      PMA_USER: root
+      PMA_PASSWORD: secret
+    ports:
+        - "25000:80"
 volumes:
   mongodb_data:
-  mysql_data:
   neo4j_data:
+  mysql-data:
