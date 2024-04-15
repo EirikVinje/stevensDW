@@ -6,18 +6,18 @@ def prepare_odb():
     conn = None
     create_db = " CREATE DATABASE odb"
     use_db = "use odb"
-    create_country = "CREATE TABLE country (countryID INT NOT NULL PRIMARY KEY, " \
-                     "country_txt VARCHAR(50))"   
     create_region = "CREATE TABLE region (regionID INT NOT NULL PRIMARY KEY, " \
-                     "region_txt VARCHAR(50), countryID INT, FOREIGN KEY (countryID) REFERENCES country(countryID))" 
+                     "region_txt VARCHAR(100))" 
+    create_country = "CREATE TABLE country (countryID INT NOT NULL PRIMARY KEY, " \
+                     "country_txt VARCHAR(100), regionID INT, FOREIGN KEY (regionID) REFERENCES region(regionID))"   
     create_provstate = "CREATE TABLE provstate (provstateID INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
-                     "provstate VARCHAR(20), regionID INT, FOREIGN KEY (regionID) REFERENCES region(regionID))" 
+                     "provstate VARCHAR(100), countryID INT, FOREIGN KEY (countryID) REFERENCES country(countryID))" 
     create_city = "CREATE TABLE city (cityID INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
-                     "city VARCHAR(50), provstateID INT, FOREIGN KEY (provstateID) REFERENCES provstate(provstateID))"   
+                     "city VARCHAR(100), provstateID INT, FOREIGN KEY (provstateID) REFERENCES provstate(provstateID))"   
     create_target = "CREATE TABLE target (targetID INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
-                     "target VARCHAR(50), targtype INT, targtype_txt VARCHAR(50))"
+                     "target VARCHAR(100), targtype INT, targtype_txt VARCHAR(100))"
     create_event = "CREATE TABLE event (eventID INT NOT NULL PRIMARY KEY, " \
-                     "iyear INT, imonth INT, iday INT, crit1 INT, crit2 INT, crit3 INT, success INT, suicide INT, gname VARCHAR(50), " \
+                     "iyear INT, imonth INT, iday INT, crit1 INT, crit2 INT, crit3 INT, success INT, suicide INT, gname VARCHAR(100), " \
                      "individual INT, nkill INT, nwound INT, property INT, cityID INT, provstateID INT, regionID INT, countryID INT, targetID INT, " \
                      "FOREIGN KEY (cityID) REFERENCES city(cityID), FOREIGN KEY (provstateID) REFERENCES provstate(provstateID), FOREIGN KEY (regionID) REFERENCES region(regionID), " \
                      "FOREIGN KEY (countryID) REFERENCES country(countryID), FOREIGN KEY (targetID) REFERENCES target(targetID))"
@@ -33,8 +33,8 @@ def prepare_odb():
         cursor = conn.cursor()
         cursor.execute(create_db)
         cursor.execute(use_db)
-        cursor.execute(create_country)
         cursor.execute(create_region)
+        cursor.execute(create_country)
         cursor.execute(create_provstate)
         cursor.execute(create_city)
         cursor.execute(create_target)
@@ -101,7 +101,7 @@ def prepare_dw():
     create_db = " CREATE DATABASE dw"
     use_db = "use dw"
     create_table = "CREATE TABLE fact (factId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
-                     "eventID INT, iyear INT, imonth INT, iday INT, crit1 INT, crit2 INT, crit3 INT, success INT, suicide INT, gname VARCHAR(50), " \
+                     "eventID INT, iyear INT, imonth INT, iday INT, crit1 INT, crit2 INT, crit3 INT, success INT, suicide INT, gname VARCHAR(100), " \
                      "individual INT, nkill INT, nwound INT, property INT, countryID INT, regionID INT, provstateID INT, cityID INT) "
     try:  
         conn = mysql.connector.connect(host='localhost',

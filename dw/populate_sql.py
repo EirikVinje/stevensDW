@@ -1,54 +1,55 @@
 import json
 import mysql.connector
 import polars as pl
+from tqdm import tqdm
 from mysql.connector import Error
+
 
 def populate_odb(input_data):
     # Connect to MySQL database
     conn = None
 
-    query_country = "INSERT INTO country(countryID,country_txt) " \
+    query_region = "INSERT INTO region(regionID,region_txt) " \
             "VALUES(%s,%s)"
-    #tuples_country = [(1,'Norway'),(2,'USA')]
-    tuples_country = []      
-
-
-    query_region = "INSERT INTO region(regionID,region_txt, countryID) " \
-            "VALUES(%s,%s,%s)"
     #tuples_region = [(1,'Oslo Fylke', 1),(2,'Eastern US', 2)]    
     tuples_region = []
+
+
+    query_country = "INSERT INTO country(countryID,country_txt, regionID) " \
+            "VALUES(%s,%s,%s)"
+    #tuples_country = [(1,'Norway'),(2,'USA')]
+    tuples_country = []      
     
 
-    query_provstate = "INSERT INTO provstate(provstate_txt, regionID) " \
+    query_provstate = "INSERT INTO provstate(provstate, countryID) " \
             "VALUES(%s,%s)"
     #tuples_provstate = [(1,'Oslo Kommune', 1),(2,'New York', 2)]
     tuples_provstate = []
 
-    query_city = "INSERT INTO city(city_txt, provstateID) " \
+    query_city = "INSERT INTO city(city, provstateID) " \
             "VALUES(%s,%s)"
     #tuples_city = [(1,'Oslo', 1),(2,'New York City', 2)]
     tuples_city = []
 
-    for i in range(len(input_data)):
-        country = input_data['country'][i]
-        country_txt = input_data['country_txt'][i]
-        if country not in tuples_country[:][0]:
-            tuples_country.append((country,country_txt))  
+    for i in tqdm(range(len(input_data))):
         
-        region = input_data['region'][i]
-        region_txt = input_data['region_txt'][i]
-        countryID = input_data['country'][i]
-        if region not in tuples_region[:][0]:
-            tuples_region.append((region,region_txt,countryID))
-        
-        provstate_txt = input_data['provstate_txt'][i]
         regionID = input_data['region'][i]
-        if (provstate_txt,regionID) not in tuples_provstate:
-            tuples_provstate.append((provstate_txt,regionID))
+        region_txt = input_data['region_txt'][i]
+        if (regionID,region_txt) not in tuples_region:
+            tuples_region.append((regionID,region_txt))
+
+        countryID = input_data['country'][i]
+        country_txt = input_data['country_txt'][i]
+        if (countryID,country_txt,regionID) not in tuples_country:
+            tuples_country.append((countryID,country_txt,regionID))  
+        
+        provstate_txt = input_data['provstate'][i]
+        if (provstate_txt,countryID) not in tuples_provstate:
+            tuples_provstate.append((provstate_txt,countryID))
 
         city_txt = input_data['city'][i]
         # provstateID is the index of the provstate in provstate_txt
-        provstateID = tuples_provstate.index((provstate_txt,regionID))
+        provstateID = tuples_provstate.index((provstate_txt,countryID))+1
         if (city_txt,provstateID) not in tuples_city:
             tuples_city.append((city_txt,provstateID))
 
@@ -62,17 +63,18 @@ def populate_odb(input_data):
                 print('Connected to MySQL database')
         
         cursor = conn.cursor()
+        print(tuples_region)
         
-        for tuple in tuples_country:
+        for tuple in tqdm(tuples_region):
+            cursor.execute(query_region,tuple)
+
+        for tuple in tqdm(tuples_country):
             cursor.execute(query_country,tuple)
         
-        for tuple in tuples_region:
-            cursor.execute(query_region,tuple)
-        
-        for tuple in tuples_provstate:
+        for tuple in tqdm(tuples_provstate):
             cursor.execute(query_provstate,tuple)
         
-        for tuple in tuples_city:
+        for tuple in tqdm(tuples_city):
             cursor.execute(query_city,tuple)
         
             
@@ -151,7 +153,7 @@ def load_dw():
             dw_conn.close()    
 
 if __name__ == '__main__':
-    path = "/home/stiffi/Documents/master_2_sem/IKT453/project/globalterrorismdb_0522dist.csv"
+    path = "/home/stiffi/Documents/master_2_sem/IKT453/project/stevensDW/data/terrorismdb_no_doubt.csv"
     with open("columns.json", "rb") as f:
             columns = json.load(f)
     columns = columns['columns']
@@ -159,11 +161,41 @@ if __name__ == '__main__':
     print(columns)
     input_data = pl.read_csv(path, infer_schema_length=0)
 
+
+    input_data = input_data.with_columns(
+        pl.col("eventid").cast(pl.Int64),
+        pl.col("iyear").cast(pl.Int64),
+        pl.col("imonth").cast(pl.Int64),
+        pl.col("iday").cast(pl.Int64),
+        pl.col("country").cast(pl.Int64),
+        pl.col("country_txt").cast(pl.String),
+        pl.col("region").cast(pl.Int64),
+        pl.col("region_txt").cast(pl.String),
+        pl.col("provstate").cast(pl.String),
+        pl.col("city").cast(pl.String),
+        pl.col("crit1").cast(pl.Int64),
+        pl.col("crit2").cast(pl.Int64),
+        pl.col("crit3").cast(pl.Int64),
+        pl.col("doubtterr").cast(pl.Int64),
+        pl.col("success").cast(pl.Int64),
+        pl.col("suicide").cast(pl.Int64),
+        pl.col("attacktype1").cast(pl.Int64),
+        pl.col("attacktype1_txt").cast(pl.String),
+        pl.col("targtype1").cast(pl.Int64),
+        pl.col("targtype1_txt").cast(pl.String),
+        pl.col("target1").cast(pl.String),
+        pl.col("gname").cast(pl.String),
+        pl.col("individual").cast(pl.Int64),
+        pl.col("nkill").cast(pl.Float64),
+        pl.col("nwound").cast(pl.Float64),
+        pl.col("property").cast(pl.Int64)
+    )
+
     print(input_data.dtypes)
-    input_data = input_data[columns]
+    #input_data = input_data[columns]
     #print(input_data)
     #print(len(input_data))
 
-    #populate_odb(input_data)
+    populate_odb(input_data)
     #load_dw()
     
