@@ -2,6 +2,10 @@ from pymongo import MongoClient
 import polars as pl
 import json
 import sys
+import multiprocessing
+import threading
+import time
+import numpy as np
 
 class TerroristMongoDBDatabase:
 
@@ -9,11 +13,55 @@ class TerroristMongoDBDatabase:
 
         self.raw = pl.read_csv(path, infer_schema_length=0)
 
+        self.raw = self.raw.with_columns(
+            pl.col("eventid").cast(pl.Int64),
+            pl.col("year").cast(pl.Int64),
+            pl.col("month").cast(pl.Int64),
+            pl.col("day").cast(pl.Int64),
+            pl.col("country_id").cast(pl.Int64),
+            pl.col("country").cast(pl.String),
+            pl.col("region_id").cast(pl.Int64),
+            pl.col("region").cast(pl.String),
+            pl.col("provstate").cast(pl.String),
+            pl.col("city").cast(pl.String),
+            pl.col("crit1").cast(pl.Int64),
+            pl.col("crit2").cast(pl.Int64),
+            pl.col("crit3").cast(pl.Int64),
+            pl.col("doubtterr").cast(pl.Int64),
+            pl.col("success").cast(pl.Int64),
+            pl.col("suicide").cast(pl.Int64),
+            pl.col("attacktype_id").cast(pl.Int64),
+            pl.col("attacktype").cast(pl.String),
+            pl.col("targettype_id").cast(pl.Int64),
+            pl.col("targettype").cast(pl.String),
+            pl.col("target").cast(pl.String),
+            pl.col("gname").cast(pl.String),
+            pl.col("individual").cast(pl.Int64),
+            pl.col("nkill").cast(pl.Float64),
+            pl.col("nwound").cast(pl.Float64),
+            pl.col("property").cast(pl.Int64)
+        )
+
         self.columns = None
         with open("columns.json", "rb") as f:
             self.columns = json.load(f)["columns"]
 
-        self.raw = self.raw[self.columns['columns']]
+        client = MongoClient("mongodb://localhost:27017")
+        db = client["mongodb_database"]
+
+        try:
+            db.validate_collection("events")
+        except:
+            print("making events")
+            self.create_collection("events")
+            self.insert_all_events()
+
+        try:
+            db.validate_collection("countries")
+        except:
+            print("making countries")
+            self.create_collection("countries")
+            self.insert_countries()
 
 
 
@@ -29,45 +77,8 @@ class TerroristMongoDBDatabase:
         db.create_collection(collection_name)
         
         client.close()
-
-    def insert(self, collection_name : str, data):
-
-        client = MongoClient("mongodb://localhost:27017")
-        db = client["mongodb_database"]
-
-        if collection_name not in db.list_collection_names():
-            assert ValueError(f"Collection {collection_name} does not exist")
-        
-        
-        # select columns
-    
-
-
-        for i in range(data.shape[0]):
-            row = data[i]
-
-            data_dict = {}
-            for key in row.keys():
-                data_dict[key] = row[key][0]
-
-            db[collection_name].insert_one(data_dict)
-        
-
-        client.close()
             
-    def select(self, collection_name : str):
-
-        client = MongoClient("mongodb://localhost:27017")
-        db = client["mongodb_database"]
-
-        if collection_name not in db.list_collection_names():
-            assert ValueError(f"Collection {collection_name} does not exist")
-
-        client = MongoClient("mongodb://localhost:27017")
-        db = client["mongodb_database"]
-
-        for data_i in db[collection_name].find():
-            print(data_i)
+    
 
     def insert_countries(self):
 
@@ -83,112 +94,89 @@ class TerroristMongoDBDatabase:
 
         data_dict = {}
 
-        for i in range(countries.shape[0]):
-            row = countries[i]
+        for i in range(self.raw.shape[0]):
+            row = self.raw[i]
 
-            if row["country"][0] in data_dict:
-                data_dict["country"]["provstate"].append(row["provstate"][0])
-                data_dict["country"]["region"].append(row["region"][0])
-                data_dict["country"]["city"].append(row["city"][0])
+            if row["country_id"][0] in data_dict:
+                # print('yo')
+                if row["provstate"][0] not in data_dict[row["country_id"][0]]["provstate"]:
+                    data_dict[row["country_id"][0]]["provstate"].append(row["provstate"][0])
+                if row["region"][0] not in data_dict[row["country_id"][0]]["region"]:
+                    data_dict[row["country_id"][0]]["region"].append(row["region"][0])
+                if row["city"][0] not in data_dict[row["country_id"][0]]["city"]:
+                    data_dict[row["country_id"][0]]["city"].append(row["city"][0])
 
             else:
-                data_dict["country"] = {"country": row["country"][0],
-                                        "country_txt": row["country_txt"][0],
+                data_dict[row["country_id"][0]] = {"countryid": row["country_id"][0],
+                                        "country": row["country"][0],
                                         "provstate": [row["provstate"][0]],
                                         "region": [row["region"][0]],
                                         "city": [row["city"][0]]}
 
-            # data_dict["country"] = {"country": row["country"][0],
-            #                         "country_txt": row["country_txt"][0]}
+        print(data_dict)
 
-            
-        
+        db["countries"].insert_many(data_dict.values())
 
-        # print(country_dict)
-        # assert False
-
-        db["countries"].insert_many(country_dict)
-
-        # for i in range(self.raw.shape[0]):
-
-
-
-        #     row = self.raw[i]
-
-        #     data_dict = {"country": row['country'],
-        #                  "country_txt": row['country_txt']}
-
-        #     db["countries"].insert_one(data_dict)
 
         client.close()
 
-    def insert_events(self):
 
-        client = MongoClient("mongodb://localhost:27017")
-        db = client["mongodb_database"]
-
-        # get 5 events for USA
-        # events = self.raw.filter(self.raw["country_txt"] == "United States")
-        # events = events.head(5)
-
-        # get all events
-        events = self.raw
-
-        for i in range(events.shape[0]):
-            row = events[i]
-            
-            data_dict = {"eventid": row["eventid"][0],
-                        "iyear": row["iyear"][0],
-                        "region": row["region"][0],
-                        "region_txt": row["region_txt"][0],
-                        "provstate": row["provstate"][0],
-                        "country": row["country"][0]}
-
-            # print(data_dict)
-
-
-            db["events"].insert_one(data_dict)
-
-        client.close()
 
     def test_query(self):
         
-        # get all events for USA, get which ID is USA from country collection, and then find all events with that ID
 
         client = MongoClient("mongodb://localhost:27017")
         db = client["mongodb_database"]
 
-        # find all events and get the amount per country, get country_Txt from countries collection
-        pipeline = [
-            {"$lookup": {
-                "from": "countries",
-                "localField": "country",
-                "foreignField": "country",
-                "as": "country_txt"
-            }},
-            {"$unwind": "$country_txt"},
-            {"$group": {"_id": "$country_txt.country_txt", "count": {"$sum": 1}}},
-            {"$sort": {"count": -1}}
-        ]
-        
+        # find all events and group amount by country_txt in events
+        result = db["events"].aggregate(
+            [{
+                "$group": {
+                    "_id": "$country",
+                    "count": {"$sum": 1}
+                }
+            }]
+            )
 
-        result = db.events.aggregate(pipeline)
 
+        print('yo')
         for data_i in result:
             print(data_i)
 
         client.close()
 
+    def get_events_for_country(self, country):
 
-    def test_full_setup(self):
-        # create collections
-        self.create_collection("country")
-        self.create_collection("event")
+        client = MongoClient("mongodb://localhost:27017")
+        db = client["mongodb_database"]
+
+        result = db["events"].find({"country": country})
+    
+        for data_i in result:
+            print(data_i['country'])
+
+    def insert_all_events(self):
+        # insert all events with multithreading
+
+        queries = []
+
+        for i in range(self.raw.shape[0]):
+            row = self.raw[i]
+
+            data_dict = {}
+            for key in self.raw.columns:
+                data_dict[key] = row[key][0]
+
+            queries.append(data_dict)
+
+        print(len(queries))
 
 
-        # insert data
+        client = MongoClient("mongodb://localhost:27017")
+        db = client["mongodb_database"]
 
-
+        db["events"].insert_many(queries)
+        client.close
 
 
 
@@ -197,7 +185,7 @@ class TerroristMongoDBDatabase:
 
 if __name__ == "__main__":
 
-    path = "../data/globalterrorismdb_0522dist.csv"
+    path = "../data/terrorismdb_no_doubt.csv"
 
     database = TerroristMongoDBDatabase(path)
     
@@ -206,15 +194,11 @@ if __name__ == "__main__":
     if args == "insert_countries":
         database.create_collection("countries")
         database.insert_countries()
-    elif args == "insert_events":
+    elif args == "insert_all":
         database.create_collection("events")
-        database.insert_events()
-
-    elif args == "select_countries":
-        database.select("countries")
-    elif args == "select_events":
-        database.select("events")
-
+        database.insert_all_events()
+    elif args == "country_query":
+        database.get_events_for_country("United States")
     else:
         database.test_query()
 
