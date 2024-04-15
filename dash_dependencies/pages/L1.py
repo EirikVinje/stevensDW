@@ -14,7 +14,7 @@ import plotly.express as px
 dash.register_page(__name__, path="/")
 
 
-layout = dmc.Container([
+layout = html.Div([
 
                 html.Div([
                     html.Header([
@@ -49,4 +49,4 @@ layout = dmc.Container([
         
     
 
-], p=0, m=0, fluid=True, className='Home')
+], className='Home')
