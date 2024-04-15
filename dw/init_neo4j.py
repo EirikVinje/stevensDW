@@ -1,62 +1,30 @@
+import multiprocessing
+import threading
+import time
 import json
 import sys
+import gc
 
 from neo4j import GraphDatabase
 from tqdm import tqdm
 import polars as pl
-import concurrent.futures as cf
-
+import numpy as np
 
 class TerroristNeo4JDatabase:
 
-    def __init__(self, path):
+    def __init__(self, datapath, max_reads : int = 10_000):
 
-        self.raw = pl.read_csv(path, infer_schema_length=0)
-        
         self.uri = "bolt://localhost:7687"
         self.username = "neo4j"
         self.password = "password"
 
-        self.columns = None
         with open("columns.json", "rb") as f:
             self.columns = json.load(f)["columns"]
 
-        self.raw = self.raw[self.columns]
-
-        self.max_reads = 5000
-
-        self.driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
+        self.raw = pl.read_csv(datapath, infer_schema_length=0)[self.columns]
+        self.max_reads = max_reads
+        self.n_threads = multiprocessing.cpu_count() - 1
         
-
-    def insert_country_nodes(self):
-
-        columns = ["country", "country_txt"]
-
-        driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
-
-        with driver.session() as session:
-            
-            for i in tqdm(range(self.raw.shape[0])):
-                
-                if i == self.max_reads:
-                    break
-                
-                row = self.raw[i]
-
-                query = self._create_query("Country", columns, row)
-
-                _q = "{" + f"country : '{row['country'][0]}'" + "}"
-                query_exists = f"MATCH (n:Country {_q}) return n"
-
-                res = session.run(query_exists) 
-
-                if res.peek() is None:
-                    session.run(query)
-
-                
-
-        driver.close()
-    
 
     def _create_query(self, node : str, columns : list[str], row : pl.DataFrame):
         
@@ -92,67 +60,53 @@ class TerroristNeo4JDatabase:
         return query
 
 
-    def insert_events(self):
+    def _thread_relationships(self, queries : list[str], i : int):
 
         driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
 
-        columns = [
-            "eventid",
-            "iyear",
-            "imonth",
-            "iday",
-            "country",
-            "country_txt",
-            "region",
-            "region_txt",
-            "provstate",
-            "city",
-            "crit1",
-            "crit2",
-            "crit3",
-            "doubtterr",
-            "success",
-            "suicide",
-            "attacktype1",
-            "attacktype1_txt",
-            "targtype1",
-            "targtype1_txt",
-            "target1",
-            "gname",
-            "individual",
-            "nkill",
-            "nwound",
-            "property"
-            ]
-
         with driver.session() as session:
-            
-            for i in tqdm(range(self.raw.shape[0])):
-                
-                if i == self.max_reads:
-                    break
 
-                query = self._create_query("Event", columns, self.raw[i])
-
+            for query in tqdm(queries, desc="Thread {} on {} queries".format(i, len(queries))):
                 session.run(query)
-
+        
         driver.close()
 
 
     def create_relationships(self):
-
+        
         driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
-
+        
         with driver.session() as session:
-            
             country_ids = session.run("MATCH (c:Country) RETURN c.country").values()
-
-            for idx in tqdm(country_ids):    
-
-                query = self._match_query("Country", "Event", "country", "country", "HAS_EVENT", idx[0])
-                session.run(query)
-                
+        
         driver.close()
+
+        queries = []
+        for country_id in country_ids:
+            query = query = self._match_query("Country", "Event", "country", "country", "HAS_EVENT", country_id[0])
+            queries.append(query)
+
+        queries_split = np.array_split(queries, self.n_threads)
+
+        print("\nMultithreading with {} threads over {} relationships\n".format(self.n_threads, len(queries)))
+
+        threads = [threading.Thread(target=self._thread_relationships, args=(queries_split[i], i,)) for i in range(len(queries_split))]
+
+        start = time.time()
+
+        for thread in threads:
+            thread.start()
+        
+        for thread in threads:
+            thread.join()
+
+        end = time.time()
+
+        threads = None
+        gc.collect()
+
+        print("\n\nDone!")
+        print("Time taken with {} threads and {} relationships: {}\n\n".format(self.n_threads, len(queries), end - start))
 
 
     def delete_all(self):
@@ -165,57 +119,95 @@ class TerroristNeo4JDatabase:
             session.run(query)
 
         driver.close()
+             
+    
+    def insert_all_countries(self):
         
+        df = self.raw[["country", "country_txt"]].unique()
 
-    def insert_one(self, session, row : pl.DataFrame, countries : list, events : list):
+        driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
 
-        if int(row["country"][0]) not in countries:
-            countries.append(int(row["country"][0]))
-            query = self._create_query("Country", ["country", "country_txt"], row)
-            session.run(query)
-
-        if int(row["eventid"][0]) not in events:
-            events.append(int(row["eventid"][0]))
-            query = self._create_query("Event", ["eventid", "iyear", "country", "country_txt", "region", "region_txt", "provstate", "city", "crit1", "crit2", "crit3", "doubtterr", "success", "suicide", "attacktype1", "attacktype1_txt", "targtype1", "targtype1_txt", "target1", "gname", "individual", "nkill", "nwound", "property"], row)
-            session.run(query)
+        with driver.session() as session:
             
+            for i in tqdm(range(df.shape[0]), desc="inserting country nodes"):
+                
+                if i == self.max_reads:
+                    break
+                
+                query = self._create_query("Country", ["country", "country_txt"], df[i])
+                session.run(query)
 
-    def insert_all(self):
+        driver.close()
 
-        countries = []
-        events = []
-        with self.driver.session() as session:
+
+    def _thread_event(self, queries : list[str], i : int):
+
+        driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
+
+        with driver.session() as session:
+
+            for query in tqdm(queries, desc="Thread {} on {} queries".format(i, len(queries))):
+                session.run(query)
+        
+        driver.close()
+
+
+    def insert_all_events(self):
+                    
+        df = self.raw
+        queries = []
+        
+        for i in tqdm(range(df.shape[0]), desc="Creating queries"):
             
-            with cf.ThreadPoolExecutor(max_workers=10) as executor:
-                
-                for i in tqdm(range(self.raw.shape[0])):
-                    
-                    if i == self.max_reads:
-                        break
-                    
-                    executor.submit(self.insert_one, session, self.raw[i], countries, events)
-                
-        self.driver.close()
+            if i == self.max_reads:
+                break
+            
+            query = self._create_query("Event", ["eventid", "iyear", "country", "country_txt", "region", "region_txt", "provstate", "city", "crit1", "crit2", "crit3", "doubtterr", "success", "suicide", "attacktype1", "attacktype1_txt", "targtype1", "targtype1_txt", "target1", "gname", "individual", "nkill", "nwound", "property"], df[i])
+            queries.append(query)
 
+            
+        n_threads = multiprocessing.cpu_count() - 1
+        queries = np.array_split(queries, n_threads)
+        
+        print("\nMultithreading with {} threads over {} events\n".format(n_threads, self.max_reads))
+
+        threads = [threading.Thread(target=self._thread_event, args=(queries[i], i,)) for i in range(len(queries))]
+        
+        start = time.time()
+
+        for thread in threads:
+            thread.start()
+        
+        for thread in threads:
+            thread.join()
+
+        end = time.time()
+
+        threads = None
+        gc.collect()
+
+        print("\n\nDone!")
+        print("Time taken with {} threads and {} events: {}\n\n".format(n_threads, self.max_reads, end - start))
+                
 
 if __name__ == "__main__":
 
-    path = "/home/eirik/projects/stevensDW/data/globalterrorismdb_0522dist.csv"
-    db = TerroristNeo4JDatabase(path)
+    datapath = "/home/eirik/projects/stevensDW/data/globalterrorismdb_0522dist.csv"
+    max_reads = 300_000
+    db = TerroristNeo4JDatabase(datapath, max_reads)
     
     args = sys.argv[-1]
 
-    if args == "ic":
-        db.insert_country_nodes()
-
-    elif args == "ie":
-        db.insert_events()
-
-    elif args == "d":
+    
+    if args == "d":
         db.delete_all()
     
     elif args == "ir":
         db.create_relationships()
 
-    elif args == "ia":
-        db.insert_all()
+    elif args == "ie":
+        db.insert_all_events()
+    
+    elif args == "ic":
+        db.insert_all_countries()
+    
