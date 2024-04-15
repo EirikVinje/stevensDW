@@ -17,7 +17,6 @@ $ sudo apt install docker-compose
 $ pip install -r requirements.txt
 $ cd dw/
 $ sudo docker-compose up -d
-$ python init_neo4j.py
 ```
 
 ## To run MySQL databases odb and dw after docker-compose
