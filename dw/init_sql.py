@@ -17,9 +17,10 @@ class TerroristSQLDatabase:
         self.raw = pl.read_csv(path, infer_schema_length=0)
         self.engine = create_engine(f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}")
 
+    
         self.columns = None
         with open("columns.json", "rb") as f:
-            self.columns = json.load(f)
+            self.columns = json.load(f)["columns"]
 
         self.raw = self.raw[self.columns]
 
@@ -97,5 +98,5 @@ if __name__ == "__main__":
 
     # database.drop_table(table_name)
     database.make_table(table_name, columns)
-    database.insert_data(table_name)
-    database.read_data(table_name)
+    # database.insert_data(table_name)
+    # database.read_data(table_name)

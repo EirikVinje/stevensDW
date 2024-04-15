@@ -11,7 +11,7 @@ class TerroristMongoDBDatabase:
 
         self.columns = None
         with open("columns.json", "rb") as f:
-            self.columns = json.load(f)
+            self.columns = json.load(f)["columns"]
 
         self.raw = self.raw[self.columns['columns']]
 
