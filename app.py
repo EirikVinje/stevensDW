@@ -5,6 +5,7 @@ import dash_bootstrap_components as dbc
 import os
 from flask import current_app
 from flask_caching import Cache
+import dash_dependencies.callbacks
 
 assets_path = os.getcwd() + '/dash_dependencies/assets'
 pages_path = os.getcwd() + '/dash_dependencies/pages'
@@ -15,7 +16,6 @@ app = Dash(__name__, use_pages=True, suppress_callback_exceptions=True, external
 app.layout = html.Div([dash.page_container,
                        dcc.Location(id="url", refresh=True),
                       ])
-
 
 
 
@@ -31,6 +31,6 @@ with app.server.app_context():
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True, port=8050)
+    app.run_server(debug=True, port=8000)
 
     

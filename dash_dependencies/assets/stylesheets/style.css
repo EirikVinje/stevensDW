@@ -4,13 +4,21 @@
 body{
     font-family: 'Roboto', sans-serif;
     background-color: white;
+    width: 99.5vw;
+}
+
+.headerSpace {
+    position: absolute;
+    z-index: 2;
+    top: 0px;
 }
 
 header{
     background-color: black;
-    width: 100vw;
+    width: 99.5vw;
     margin-bottom: 0px;
     position: sticky;
+    z-index: 2
 }
 
 header img{
@@ -40,7 +48,7 @@ header h1{
 
 .Home{
     height: 100vh;
-    width: 100vw;
+    width: 99.5vw;
     margin: 0px;
 }
 
@@ -67,17 +75,26 @@ header h1{
 
 
 
-.logoSpace {
-    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+.inputSpace {
+    z-index: 2;
+    box-shadow: rgba(0, 0, 0, 0.55) 0px 0px 100px 10px;
     border: 1px solid rgb(228, 228, 228);
     height: 50vh;
-    margin: 50px;
+    width: 99.5vw;
+    padding: 50px;
     background-color: rgb(228, 228, 228);
+    position: absolute;
+    top: 60vh;
+    overflow: hidden;
 }
 
 
 
-.logoText {
-    text-align: center;
-    font-size: large;
+
+.geomapSpace {
+    position: absolute;
+    top: 0px;
+    z-index: 1;
+    width: 99vw;
+
 }
