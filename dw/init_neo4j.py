@@ -109,7 +109,6 @@ class TerroristNeo4JDatabase:
         print("Time taken with {} threads and {} relationships: {}\n\n".format(self.n_threads, len(queries), end - start))
 
 
-
     def delete_all(self):
 
         driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
