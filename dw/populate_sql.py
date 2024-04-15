@@ -1,24 +1,56 @@
+import json
 import mysql.connector
+import polars as pl
 from mysql.connector import Error
 
-def populate_odb():
+def populate_odb(input_data):
     # Connect to MySQL database
     conn = None
+
     query_country = "INSERT INTO country(countryID,country_txt) " \
             "VALUES(%s,%s)"
-    tuples_country = [(1,'Norway'),(2,'USA')]   
+    #tuples_country = [(1,'Norway'),(2,'USA')]
+    tuples_country = []      
+
 
     query_region = "INSERT INTO region(regionID,region_txt, countryID) " \
             "VALUES(%s,%s,%s)"
-    tuples_region = [(1,'Oslo Fylke', 1),(2,'Eastern US', 2)]    
+    #tuples_region = [(1,'Oslo Fylke', 1),(2,'Eastern US', 2)]    
+    tuples_region = []
+    
 
-    query_provstate = "INSERT INTO provstate(provstateID,provstate_txt, regionID) " \
-            "VALUES(%s,%s,%s)"
-    tuples_provstate = [(1,'Oslo Kommune', 1),(2,'New York', 2)]
+    query_provstate = "INSERT INTO provstate(provstate_txt, regionID) " \
+            "VALUES(%s,%s)"
+    #tuples_provstate = [(1,'Oslo Kommune', 1),(2,'New York', 2)]
+    tuples_provstate = []
 
-    query_city = "INSERT INTO city(cityID,city_txt, provstateID) " \
-            "VALUES(%s,%s,%s)"
-    tuples_city = [(1,'Oslo', 1),(2,'New York City', 2)]
+    query_city = "INSERT INTO city(city_txt, provstateID) " \
+            "VALUES(%s,%s)"
+    #tuples_city = [(1,'Oslo', 1),(2,'New York City', 2)]
+    tuples_city = []
+
+    for i in range(len(input_data)):
+        country = input_data['country'][i]
+        country_txt = input_data['country_txt'][i]
+        if country not in tuples_country[:][0]:
+            tuples_country.append((country,country_txt))  
+        
+        region = input_data['region'][i]
+        region_txt = input_data['region_txt'][i]
+        countryID = input_data['country'][i]
+        if region not in tuples_region[:][0]:
+            tuples_region.append((region,region_txt,countryID))
+        
+        provstate_txt = input_data['provstate_txt'][i]
+        regionID = input_data['region'][i]
+        if (provstate_txt,regionID) not in tuples_provstate:
+            tuples_provstate.append((provstate_txt,regionID))
+
+        city_txt = input_data['city'][i]
+        # provstateID is the index of the provstate in provstate_txt
+        provstateID = tuples_provstate.index((provstate_txt,regionID))
+        if (city_txt,provstateID) not in tuples_city:
+            tuples_city.append((city_txt,provstateID))
 
     try:  
         conn = mysql.connector.connect(host='localhost',
@@ -119,6 +151,19 @@ def load_dw():
             dw_conn.close()    
 
 if __name__ == '__main__':
-    populate_odb()
+    path = "/home/stiffi/Documents/master_2_sem/IKT453/project/globalterrorismdb_0522dist.csv"
+    with open("columns.json", "rb") as f:
+            columns = json.load(f)
+    columns = columns['columns']
+
+    print(columns)
+    input_data = pl.read_csv(path, infer_schema_length=0)
+
+    print(input_data.dtypes)
+    input_data = input_data[columns]
+    #print(input_data)
+    #print(len(input_data))
+
+    #populate_odb(input_data)
     #load_dw()
     
