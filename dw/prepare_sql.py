@@ -6,21 +6,21 @@ def prepare_odb():
     conn = None
     create_db = " CREATE DATABASE odb"
     use_db = "use odb"
-    create_region = "CREATE TABLE region (regionID INT NOT NULL PRIMARY KEY, " \
-                     "region_txt VARCHAR(100))" 
-    create_country = "CREATE TABLE country (countryID INT NOT NULL PRIMARY KEY, " \
-                     "country_txt VARCHAR(100), regionID INT, FOREIGN KEY (regionID) REFERENCES region(regionID))"   
-    create_provstate = "CREATE TABLE provstate (provstateID INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
-                     "provstate VARCHAR(100), countryID INT, FOREIGN KEY (countryID) REFERENCES country(countryID))" 
-    create_city = "CREATE TABLE city (cityID INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
-                     "city VARCHAR(100), provstateID INT, FOREIGN KEY (provstateID) REFERENCES provstate(provstateID))"   
-    create_target = "CREATE TABLE target (targetID INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
-                     "target VARCHAR(100), targtype INT, targtype_txt VARCHAR(100))"
-    create_event = "CREATE TABLE event (eventID INT NOT NULL PRIMARY KEY, " \
-                     "iyear INT, imonth INT, iday INT, crit1 INT, crit2 INT, crit3 INT, success INT, suicide INT, gname VARCHAR(100), " \
-                     "individual INT, nkill INT, nwound INT, property INT, cityID INT, provstateID INT, regionID INT, countryID INT, targetID INT, " \
-                     "FOREIGN KEY (cityID) REFERENCES city(cityID), FOREIGN KEY (provstateID) REFERENCES provstate(provstateID), FOREIGN KEY (regionID) REFERENCES region(regionID), " \
-                     "FOREIGN KEY (countryID) REFERENCES country(countryID), FOREIGN KEY (targetID) REFERENCES target(targetID))"
+    create_region = "CREATE TABLE region (region_id INT NOT NULL PRIMARY KEY, " \
+                     "region VARCHAR(100))" 
+    create_country = "CREATE TABLE country (country_id INT NOT NULL PRIMARY KEY, " \
+                     "country VARCHAR(100), region_id INT, FOREIGN KEY (region_id) REFERENCES region(region_id))"   
+    create_provstate = "CREATE TABLE provstate (provstate_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
+                     "provstate VARCHAR(100), country_id INT, FOREIGN KEY (country_id) REFERENCES country(country_id))" 
+    create_city = "CREATE TABLE city (city_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
+                     "city VARCHAR(100), provstate_id INT, FOREIGN KEY (provstate_id) REFERENCES provstate(provstate_id))"   
+    create_target = "CREATE TABLE target (target_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
+                     "target VARCHAR(400), targettype_id INT, targettype VARCHAR(100))"
+    create_event = "CREATE TABLE event (event_id BIGINT NOT NULL PRIMARY KEY, " \
+                     "year INT, month INT, day INT, crit1 INT, crit2 INT, crit3 INT, success INT, suicide INT, attacktype_id INT, attacktype VARCHAR(100), gname VARCHAR(400), " \
+                     "individual INT, nkill INT, nwound INT, property INT, city_id INT, provstate_id INT, country_id INT, region_id INT, target_id INT, " \
+                     "FOREIGN KEY (city_id) REFERENCES city(city_id), FOREIGN KEY (provstate_id) REFERENCES provstate(provstate_id), FOREIGN KEY (region_id) REFERENCES region(region_id), " \
+                     "FOREIGN KEY (country_id) REFERENCES country(country_id), FOREIGN KEY (target_id) REFERENCES target(target_id))"
 
     try:
         conn = mysql.connector.connect(host='localhost', 
@@ -59,11 +59,11 @@ def alter_odb():
     use_db = "use odb"
     alter_region = "ALTER TABLE region ADD FOREIGN KEY (country) REFERENCES country(country)"
     alter_provstate = "ALTER TABLE provstate ADD FOREIGN KEY (region) REFERENCES region(region)"
-    alter_city = "ALTER TABLE city ADD FOREIGN KEY (provstateId) REFERENCES provstate(provstateID)"
+    alter_city = "ALTER TABLE city ADD FOREIGN KEY (provstate_id) REFERENCES provstate(provstate_id)"
     alter_event = "ALTER TABLE event ADD FOREIGN KEY (country) REFERENCES country(country)"
     alter_event2 = "ALTER TABLE event ADD FOREIGN KEY (region) REFERENCES region(region)"
-    alter_event3 = "ALTER TABLE event ADD FOREIGN KEY (provstateID) REFERENCES provstate(provstateID)"
-    alter_event4 = "ALTER TABLE event ADD FOREIGN KEY (cityID) REFERENCES city(cityID)"
+    alter_event3 = "ALTER TABLE event ADD FOREIGN KEY (provstate_id) REFERENCES provstate(provstate_id)"
+    alter_event4 = "ALTER TABLE event ADD FOREIGN KEY (city_id) REFERENCES city(city_id)"
 
     try:
         conn = mysql.connector.connect(host='localhost', 
@@ -100,9 +100,9 @@ def prepare_dw():
     conn = None
     create_db = " CREATE DATABASE dw"
     use_db = "use dw"
-    create_table = "CREATE TABLE fact (factId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
-                     "eventID INT, iyear INT, imonth INT, iday INT, crit1 INT, crit2 INT, crit3 INT, success INT, suicide INT, gname VARCHAR(100), " \
-                     "individual INT, nkill INT, nwound INT, property INT, countryID INT, regionID INT, provstateID INT, cityID INT) "
+    create_table = "CREATE TABLE fact (fact_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
+                     "event_id BIGINT, year INT, month INT, day INT, crit1 INT, crit2 INT, crit3 INT, success INT, suicide INT, attacktype_id INT, attacktype VARCHAR(100), gname VARCHAR(400), " \
+                     "individual INT, nkill INT, nwound INT, property INT, country_id INT, region_id INT, provstate_id INT, city_id INT) "
     try:  
         conn = mysql.connector.connect(host='localhost',
                                   port=23306, 
