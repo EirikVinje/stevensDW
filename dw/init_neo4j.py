@@ -18,16 +18,44 @@ class TerroristNeo4JDatabase:
         self.username = "neo4j"
         self.password = "password"
 
-        with open("columns.json", "rb") as f:
-            self.columns = json.load(f)["columns"]
+        self.raw = pl.read_csv(datapath, infer_schema_length=0)
+        self.columns = self.raw.columns
 
-        self.raw = pl.read_csv(datapath, infer_schema_length=0)[self.columns]
+        self.raw = self.raw.with_columns(
+        pl.col("event_id").cast(pl.Int64),
+        pl.col("year").cast(pl.Int64),
+        pl.col("month").cast(pl.Int64),
+        pl.col("day").cast(pl.Int64),
+        pl.col("country_id").cast(pl.Int64),
+        pl.col("country").cast(pl.String),
+        pl.col("region_id").cast(pl.Int64),
+        pl.col("region").cast(pl.String),
+        pl.col("provstate").cast(pl.String),
+        pl.col("city").cast(pl.String),
+        pl.col("crit1").cast(pl.Int64),
+        pl.col("crit2").cast(pl.Int64),
+        pl.col("crit3").cast(pl.Int64),
+        pl.col("doubtterr").cast(pl.Int64),
+        pl.col("success").cast(pl.Int64),
+        pl.col("suicide").cast(pl.Int64),
+        pl.col("attacktype_id").cast(pl.Int64),
+        pl.col("attacktype").cast(pl.String),
+        pl.col("targettype_id").cast(pl.Int64),
+        pl.col("targettype").cast(pl.String),
+        pl.col("target").cast(pl.String),
+        pl.col("gname").cast(pl.String),
+        pl.col("individual").cast(pl.Int64),
+        pl.col("nkill").cast(pl.Float64),
+        pl.col("nwound").cast(pl.Float64),
+        pl.col("property").cast(pl.Int64)
+        )
+
         self.max_reads = max_reads
         self.n_threads = multiprocessing.cpu_count() - 1
         
 
     def _create_query(self, node : str, columns : list[str], row : pl.DataFrame):
-        
+
         values = [row[c][0] for c in columns]
 
         querydict = "{"
@@ -37,9 +65,14 @@ class TerroristNeo4JDatabase:
                 querydict += f"{key} : 'None', "
 
             elif value is not None:
-                value = value.replace('&', 'and')
-                value = value.replace("'", "")
-                querydict += f"{key} : '{value}', "
+                
+                if isinstance(value, str):
+                    value = value.replace('&', 'and')
+                    value = value.replace("'", "")
+                    querydict += f"{key} : '{value}', "
+
+                elif isinstance(value, int):
+                    querydict += f"{key} : {value}, "
         
         querydict = querydict[:-2] + "}"
         
@@ -77,13 +110,13 @@ class TerroristNeo4JDatabase:
         driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
         
         with driver.session() as session:
-            country_ids = session.run("MATCH (c:Country) RETURN c.country").values()
+            country_ids = session.run("MATCH (c:Country) RETURN c.country_id").values()
         
         driver.close()
 
         queries = []
         for country_id in country_ids:
-            query = query = self._match_query("Country", "Event", "country", "country", "HAS_EVENT", country_id[0])
+            query = query = self._match_query("Country", "Event", "country_id", "country_id", "HAS_EVENT", country_id[0])
             queries.append(query)
 
         queries_split = np.array_split(queries, self.n_threads)
@@ -123,7 +156,7 @@ class TerroristNeo4JDatabase:
     
     def insert_all_countries(self):
         
-        df = self.raw[["country", "country_txt"]].unique()
+        df = self.raw[["country_id", "country"]].unique()
 
         driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
 
@@ -134,7 +167,7 @@ class TerroristNeo4JDatabase:
                 if i == self.max_reads:
                     break
                 
-                query = self._create_query("Country", ["country", "country_txt"], df[i])
+                query = self._create_query("Country", ["country_id", "country"], df[i])
                 session.run(query)
 
         driver.close()
@@ -159,17 +192,15 @@ class TerroristNeo4JDatabase:
         
         for i in tqdm(range(df.shape[0]), desc="Creating queries"):
             
-            if i == self.max_reads:
-                break
-            
-            query = self._create_query("Event", ["eventid", "iyear", "country", "country_txt", "region", "region_txt", "provstate", "city", "crit1", "crit2", "crit3", "doubtterr", "success", "suicide", "attacktype1", "attacktype1_txt", "targtype1", "targtype1_txt", "target1", "gname", "individual", "nkill", "nwound", "property"], df[i])
+            query = self._create_query("Event", ["event_id", "year", "country_id", "country", "region_id", "region", "provstate", "city", "crit1", "crit2", "crit3", "doubtterr", "success", "suicide", "attacktype_id", "attacktype", "targettype_id", "targettype", "target", "gname", "individual", "nkill", "nwound", "property"], df[i])
             queries.append(query)
 
-            
-        n_threads = multiprocessing.cpu_count() - 1
-        queries = np.array_split(queries, n_threads)
+            if i == self.max_reads:
+                break
+
+        queries = np.array_split(queries, self.n_threads)
         
-        print("\nMultithreading with {} threads over {} events\n".format(n_threads, self.max_reads))
+        print("\nMultithreading with {} threads over {} events\n".format(self.n_threads, self.max_reads))
 
         threads = [threading.Thread(target=self._thread_event, args=(queries[i], i,)) for i in range(len(queries))]
         
@@ -187,18 +218,17 @@ class TerroristNeo4JDatabase:
         gc.collect()
 
         print("\n\nDone!")
-        print("Time taken with {} threads and {} events: {}\n\n".format(n_threads, self.max_reads, end - start))
+        print("Time taken with {} threads and {} events: {}\n\n".format(self.n_threads, self.max_reads, end - start))
                 
 
 if __name__ == "__main__":
 
-    datapath = "/home/eirik/projects/stevensDW/data/globalterrorismdb_0522dist.csv"
-    max_reads = 300_000
+    datapath = "/home/eirik/projects/stevensDW/data/terrorismdb_no_doubt.csv"
+    max_reads = 10_000
     db = TerroristNeo4JDatabase(datapath, max_reads)
     
     args = sys.argv[-1]
 
-    
     if args == "d":
         db.delete_all()
     
