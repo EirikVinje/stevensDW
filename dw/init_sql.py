@@ -1,4 +1,5 @@
 import json
+import pycountry_convert
 import mysql.connector
 import polars as pl
 import numpy as np
@@ -140,8 +141,6 @@ class TerroristSQLDatabase:
     def read_data(self, table_name : str):
 
         conn = None
-        read_query = f"SELECT * FROM {table_name}"
-
         try:
             conn = mysql.connector.connect(host=self.DB_HOST, 
                                     port=13306, 
@@ -152,9 +151,9 @@ class TerroristSQLDatabase:
                     print('Connected to database, selecting', table_name)
         
             cursor = conn.cursor()
-            res = cursor.execute(read_query)
-            for row in res:
-                print(row)
+            cursor.execute(f"SELECT * FROM {table_name};")
+            for res in cursor.fetchall():
+                print(res)
         
         except Error as e:
             print(e)
@@ -306,11 +305,123 @@ class TerroristSQLDatabase:
             if conn is not None and conn.is_connected():
                 cursor.close()
                 conn.close()
+    
+    def get_num_events_all_countries(self):
+        conn = None
+        try:
+            conn = mysql.connector.connect(host=self.DB_HOST, 
+                                    port=13306, 
+                                    database = self.DB_NAME,
+                                    user=self.DB_USER,
+                                    password=self.DB_PASSWORD)
+            if conn.is_connected():
+                    print('Connected to database, getting number of events for all countries')
+        
+            cursor = conn.cursor()
+            cursor.execute("SELECT country.country, COUNT(event.event_id) count FROM event, country WHERE event.country_id=country.country_id GROUP BY country.country ORDER BY count DESC;")
+            res = cursor.fetchall()
+            #for r in res:
+            #    print(r)
+            
+            data = []
+
+            for i in res:
+                #print(i[0])
+                try:
+                    country = pycountry_convert.country_name_to_country_alpha3(i[0])
+                    print(country)
+                    if country:
+                        data.append([country, i[1], i[0]])
+                except:
+                    continue
+
+            df = pl.DataFrame(data, schema=["iso_alpha", "count", "country"])
+            print(df)
+        
+        except Error as e:
+            print(e)
+            
+        finally:
+            if conn is not None and conn.is_connected():
+                cursor.close()
+                conn.close()
+
+    def get_events_by_country(self, country_name : str):
+        conn = None
+        try:
+            conn = mysql.connector.connect(host=self.DB_HOST, 
+                                    port=13306, 
+                                    database = self.DB_NAME,
+                                    user=self.DB_USER,
+                                    password=self.DB_PASSWORD)
+            if conn.is_connected():
+                    print('Connected to database, getting events by country')
+        
+            cursor = conn.cursor()
+            cursor.execute(f"SELECT event.* FROM event, country WHERE event.country_id=country.country_id AND country.country='{country_name}';")
+
+            res = cursor.fetchall()
+            #for r in res:
+            #    print(r)
+            
+            data = []
+
+            for i in res:
+                data.append([i])
+
+            df = pl.DataFrame(data, schema=["event",""])
+            print(df)
+            
+        
+        except Error as e:
+            print(e)
+            
+        finally:
+            if conn is not None and conn.is_connected():
+                cursor.close()
+                conn.close()
+    
+    def get_events_by_region(self, region_name : str):
+        conn = None
+        try:
+            conn = mysql.connector.connect(host=self.DB_HOST, 
+                                    port=13306, 
+                                    database = self.DB_NAME,
+                                    user=self.DB_USER,
+                                    password=self.DB_PASSWORD)
+            if conn.is_connected():
+                    print('Connected to database, getting events by country')
+        
+            cursor = conn.cursor()
+            cursor.execute(f"SELECT event.* FROM event, country WHERE event.country_id=country.country_id AND country.country='{region_name}';")
+
+            res = cursor.fetchall()
+            #for r in res:
+            #    print(r)
+            
+            data = []
+
+            for i in res:
+                data.append([i])
+
+            df = pl.DataFrame(data, schema=["event",""])
+            print(df)
+            
+        
+        except Error as e:
+            print(e)
+            
+        finally:
+            if conn is not None and conn.is_connected():
+                cursor.close()
+                conn.close()
 
 if __name__ == '__main__':
     path = "/home/stiffi/Documents/master_2_sem/IKT453/project/stevensDW/data/terrorismdb_no_doubt.csv"
     db = TerroristSQLDatabase(path)
     #db.populate_db(db.raw)
-    db.read_data('country')
+    #db.read_data('country')
+    #db.get_num_events_all_countries()
+    db.get_events_by_country(country_name='Iraq')
 
     
