@@ -1,0 +1,30 @@
+{"columns" : 
+    [
+ "eventid",
+ "year",
+ "month",
+ "day",
+ "country_id",
+ "country",
+ "region_id",
+ "region",
+ "provstate",
+ "city",
+ "crit1",
+ "crit2",
+ "crit3",
+ "doubtterr",
+ "success",
+ "suicide",
+ "attacktype_id",
+ "attacktype",
+ "targettype_id",
+ "targettype",
+ "target",
+ "gname",
+ "individual",
+ "nkill",
+ "nwound",
+ "property"
+]
+}

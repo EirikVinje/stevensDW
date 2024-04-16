@@ -6,6 +6,8 @@ import multiprocessing
 import threading
 import time
 import numpy as np
+import pycountry
+
 
 class TerroristMongoDBDatabase:
 
@@ -53,19 +55,19 @@ class TerroristMongoDBDatabase:
             db.validate_collection("events")
         except:
             print("making events")
-            self.create_collection("events")
-            self.insert_all_events()
+            self._create_collection("events")
+            self._insert_all_events()
 
         try:
             db.validate_collection("countries")
         except:
             print("making countries")
-            self.create_collection("countries")
-            self.insert_countries()
+            self._create_collection("countries")
+            self._insert_countries()
 
 
 
-    def create_collection(self, collection_name : str):
+    def _create_collection(self, collection_name : str):
 
         client = MongoClient("mongodb://localhost:27017")
         db = client["mongodb_database"]
@@ -80,7 +82,7 @@ class TerroristMongoDBDatabase:
             
     
 
-    def insert_countries(self):
+    def _insert_countries(self):
 
         client = MongoClient("mongodb://localhost:27017")
         db = client["mongodb_database"]
@@ -120,42 +122,7 @@ class TerroristMongoDBDatabase:
 
         client.close()
 
-
-
-    def test_query(self):
-        
-
-        client = MongoClient("mongodb://localhost:27017")
-        db = client["mongodb_database"]
-
-        # find all events and group amount by country_txt in events
-        result = db["events"].aggregate(
-            [{
-                "$group": {
-                    "_id": "$country",
-                    "count": {"$sum": 1}
-                }
-            }]
-            )
-
-
-        print('yo')
-        for data_i in result:
-            print(data_i)
-
-        client.close()
-
-    def get_events_for_country(self, country):
-
-        client = MongoClient("mongodb://localhost:27017")
-        db = client["mongodb_database"]
-
-        result = db["events"].find({"country": country})
-    
-        for data_i in result:
-            print(data_i['country'])
-
-    def insert_all_events(self):
+    def _insert_all_events(self):
         # insert all events with multithreading
 
         queries = []
@@ -180,6 +147,49 @@ class TerroristMongoDBDatabase:
 
 
 
+    def get_num_events_all_countries(self):
+        
+
+        client = MongoClient("mongodb://localhost:27017")
+        db = client["mongodb_database"]
+
+
+        result = db["events"].aggregate(
+            [{
+                "$group": {
+                    "_id": "$country",
+                    "count": {"$sum": 1}
+                }
+            }]
+            )
+
+        data = []
+        for i in result:
+            country = pycountry.countries.get(name=i["_id"])
+            if country:
+                data.append([country.alpha_3, i["count"], i["_id"]])
+
+        df = pl.DataFrame(data, schema=["iso_alpha", "count", "country"])
+        client.close()
+
+        return df
+
+    def get_events_one_country(self, country):
+
+        client = MongoClient("mongodb://localhost:27017")
+        db = client["mongodb_database"]
+
+        result = db["events"].find({"country": country})
+    
+        df = pl.DataFrame(result)
+        df = df.drop("_id")
+        print(df)
+        print(df.columns)
+
+    
+
+
+
 
 
 
@@ -191,15 +201,6 @@ if __name__ == "__main__":
     
     args = sys.argv[-1]
     
-    if args == "insert_countries":
-        database.create_collection("countries")
-        database.insert_countries()
-    elif args == "insert_all":
-        database.create_collection("events")
-        database.insert_all_events()
-    elif args == "country_query":
-        database.get_events_for_country("United States")
-    else:
-        database.test_query()
+    database.get_events_one_country("Norway")
 
     

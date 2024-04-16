@@ -2,7 +2,9 @@
 from dash import Dash, html, dcc, Input, Output, callback, dash_table
 import plotly.express as px
 
-
+from pymongo import MongoClient
+import polars as pl
+from dw.init_mongodb import TerroristMongoDBDatabase
 
 
 
@@ -14,13 +16,15 @@ import plotly.express as px
 )
 def update_geomap(year):
 
+    db = TerroristMongoDBDatabase("data/terrorismdb_no_doubt.csv")
+    df = db.get_num_events_all_countries()
 
-    df = px.data.gapminder().query(f"year=={year}")
+    # df = px.data.gapminder().query(f"year=={year}")
 
     fig = px.choropleth(df, locations="iso_alpha",  
-                        color="lifeExp", # lifeExp is a column of gapminder
+                        color="count", # lifeExp is a column of gapminder
                         hover_name="country", # column to add to hover information
-                        color_continuous_scale=px.colors.sequential.Plasma)
+                        color_continuous_scale=px.colors.sequential.Plasma) #range_color
 
     fig.update(layout_coloraxis_showscale=False)
       
