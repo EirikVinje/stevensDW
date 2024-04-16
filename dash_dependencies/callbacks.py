@@ -43,15 +43,48 @@ def update_geomap(year):
     fig.update_traces(customdata=df['country'])
     return fig
 
-@callback(
-    Output('hover-value', 'children'),
-    Input('geomap', 'clickData'),
-    prevent_initial_call=True)
 
-def update_hover(clickData):
+@callback(
+    Output('geograph1', 'figure'),   
+    Output('geograph2', 'figure'),        
+
+    Input('geomap', 'clickData'),
+    prevent_initial_call=False)
+
+def update_geograph(clickData):
+
+    if clickData is None:
+        clickCountry='United States'
+    else:
+        clickCountry = clickData['points'][0]['customdata']
 
     df = px.data.gapminder()
 
-    dff = df.loc[df['country'] == clickData['points'][0]['customdata']]
+    dff = df.loc[df['country'] == clickCountry]
 
-    return dash_table.DataTable(dff.to_dict('records'), [{"name": i, "id": i} for i in dff.columns])
+    fig1 = px.line(dff, x="year", y="lifeExp", title=f'Life expectancy in {clickCountry}', markers='*')
+    fig2 = px.line(dff, x="year", y="pop", title=f'Population in {clickCountry}', markers='*')
+
+    fig1.update_layout(
+            autosize=True,
+            margin = dict(
+                    l=0,
+                    r=0,
+                    b=0,
+                    t=50,
+                ),
+                width=600,
+                height=340)
+
+    fig2.update_layout(
+            autosize=True,
+            margin = dict(
+                    l=0,
+                    r=0,
+                    b=0,
+                    t=50,
+                ),
+                width=600,
+                height=340)
+
+    return fig1, fig2

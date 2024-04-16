@@ -2,7 +2,7 @@ import dash
 from dash import html, dcc, Input, Output, callback
 import dash_mantine_components as dmc
 import dash_dependencies.callbacks
-
+import dash_bootstrap_components as dbc
 import plotly.express as px
 
 
@@ -23,10 +23,12 @@ layout = html.Div([
                     ], id='headerSpace'),
                     
 
-                    html.Div(
-                        dcc.Graph(id='geomap', config = {'scrollZoom':False}), 
-                        
-                            className='geomapSpace'),
+                    dbc.Row([
+
+                            dbc.Col(dcc.Graph(id='geomap', config = {'scrollZoom':False}, hoverData={'points': [{'customdata': 'Japan'}]}), width=8, className='geomapSpace', style={'border':'1px solid black'}),
+                            dbc.Col(html.Div([dcc.Graph(id='geograph1'), dcc.Graph(id='geograph2')]), width={"size": 4,"offset": 8}, className='geographSpace')    
+
+                            ], className='geoSpace'),
 
                     html.Br(),
 

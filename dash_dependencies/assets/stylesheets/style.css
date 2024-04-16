@@ -84,17 +84,23 @@ header h1{
     padding: 50px;
     background-color: rgb(228, 228, 228);
     position: absolute;
-    top: 60vh;
+    top: 70vh;
     overflow: hidden;
 }
 
 
-
+.geographSpace{
+    position: absolute;
+    background-color: rgb(255, 255, 255);
+    z-index: 1;
+    height: 70vh;
+    width: 35vw;
+}
 
 .geomapSpace {
     position: absolute;
     top: 0px;
-    z-index: 1;
+    z-index: 0;
     width: 99vw;
 
 }
