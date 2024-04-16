@@ -6,7 +6,8 @@ import multiprocessing
 import threading
 import time
 import numpy as np
-import pycountry
+import pycountry_convert
+
 
 
 class TerroristMongoDBDatabase:
@@ -16,7 +17,7 @@ class TerroristMongoDBDatabase:
         self.raw = pl.read_csv(path, infer_schema_length=0)
 
         self.raw = self.raw.with_columns(
-            pl.col("eventid").cast(pl.Int64),
+            pl.col("event_id").cast(pl.Int64),
             pl.col("year").cast(pl.Int64),
             pl.col("month").cast(pl.Int64),
             pl.col("day").cast(pl.Int64),
@@ -165,26 +166,30 @@ class TerroristMongoDBDatabase:
 
         data = []
         for i in result:
-            country = pycountry.countries.get(name=i["_id"])
-            if country:
-                data.append([country.alpha_3, i["count"], i["_id"]])
+            try:
+                country = pycountry_convert.country_name_to_country_alpha3(i["_id"])
+            except:
+                continue
+            if len(country) == 3:
+                data.append([country, i["count"], i["_id"]])
+            else:
+                print(i["_id"])
 
         df = pl.DataFrame(data, schema=["iso_alpha", "count", "country"])
         client.close()
 
         return df
 
-    def get_events_one_country(self, country):
+    def get_events_by_country(self, country):
 
         client = MongoClient("mongodb://localhost:27017")
         db = client["mongodb_database"]
 
-        result = db["events"].find({"country": country})
-    
+        result = list(db["events"].find({"country": country}))
         df = pl.DataFrame(result)
         df = df.drop("_id")
-        print(df)
-        print(df.columns)
+
+        return df
 
     
 
@@ -201,6 +206,6 @@ if __name__ == "__main__":
     
     args = sys.argv[-1]
     
-    database.get_events_one_country("Norway")
+    database.get_events_by_country("Norway")
 
     
