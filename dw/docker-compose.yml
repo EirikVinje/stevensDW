@@ -26,41 +26,24 @@ services:
     volumes:
       - neo4j_data:/data
 
-  mysql-odb-server:
+  mysql-server:
     image: mysql:8.0.19
     environment:
       MYSQL_ROOT_PASSWORD: secret
     volumes:
-      - mysql-data:/var/lib/mysql_odb
+      - mysql-data:/var/lib/mysql
     ports:
       - "13306:3306"
-      
-  mysql-dw-server:
-    image: mysql:8.0.19
-    environment:
-      MYSQL_ROOT_PASSWORD: secret
-    volumes:
-      - mysql-data:/var/lib/mysql_dw
-    ports:
-      - "23306:3306"
 
-  phpmyadmin-odb:
+  phpmyadmin:
     image: phpmyadmin/phpmyadmin:5.0.1
     environment:
-      PMA_HOST: mysql-odb-server
+      PMA_HOST: mysql-server
       PMA_USER: root
       PMA_PASSWORD: secret
     ports:
         - "15000:80"
         
-  phpmyadmin-dw:
-    image: phpmyadmin/phpmyadmin:5.0.1
-    environment:
-      PMA_HOST: mysql-dw-server
-      PMA_USER: root
-      PMA_PASSWORD: secret
-    ports:
-        - "25000:80"
 volumes:
   mongodb_data:
   neo4j_data:
