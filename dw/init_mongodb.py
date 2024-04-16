@@ -116,7 +116,7 @@ class TerroristMongoDBDatabase:
                                         "region": [row["region"][0]],
                                         "city": [row["city"][0]]}
 
-        print(data_dict)
+        # print(data_dict)
 
         db["countries"].insert_many(data_dict.values())
 
@@ -137,7 +137,7 @@ class TerroristMongoDBDatabase:
 
             queries.append(data_dict)
 
-        print(len(queries))
+        # print(len(queries))
 
 
         client = MongoClient("mongodb://localhost:27017")
@@ -173,7 +173,7 @@ class TerroristMongoDBDatabase:
             if len(country) == 3:
                 data.append([country, i["count"], i["_id"]])
             else:
-                print(i["_id"])
+                pass
 
         df = pl.DataFrame(data, schema=["iso_alpha", "count", "country"])
         client.close()
@@ -191,8 +191,42 @@ class TerroristMongoDBDatabase:
 
         return df
 
-    def get_events_with_criteria(self, country, start_year, end_year, attack_type, target_type, success)
-        pass
+    def get_events_with_criteria(self, country=None, start_year=None, end_year=None, attack_type=None, target_type=None, success=None):
+        
+        client = MongoClient("mongodb://localhost:27017")
+        db = client["mongodb_database"]
+
+        print(country, start_year, end_year, attack_type, target_type, success)
+
+        if start_year != None and end_year == None:
+            end_year = start_year
+
+
+        query = {"country": country, 
+                 "year": {"$gte": start_year, "$lte": end_year},
+                 "attacktype": attack_type, 
+                 "targettype": target_type, 
+                 "success": success}
+
+        # remove None values from query
+        query = {k: v for k, v in query.items() if v is not None}
+
+        # remove year if not specified
+        if "year" in query and query["year"] == {"$gte": None, "$lte": None}:
+            del query["year"]
+
+        print(query)
+
+        result = list(db["events"].find(query))
+        df = pl.DataFrame(result)
+        df = df.drop(["_id", "country_id", "region_id", "attacktype_id", "targettype_id"])
+        
+        # print(df.columns)
+        # print(df['attacktype'])
+        print(df)
+        assert False
+
+        return df
 
 
 
@@ -208,6 +242,6 @@ if __name__ == "__main__":
     
     args = sys.argv[-1]
     
-    database.get_events_by_country("Norway")
+    database.get_events_with_criteria("United States", 2001, 2001)
 
     
