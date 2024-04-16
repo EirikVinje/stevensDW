@@ -191,7 +191,9 @@ class TerroristMongoDBDatabase:
 
         return df
 
-    
+    def get_events_with_criteria(self, country, start_year, end_year, attack_type, target_type, success)
+        pass
+
 
 
 
