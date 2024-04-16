@@ -171,7 +171,7 @@ class TerroristNeo4JDatabase:
 
         with driver.session() as session:
             
-            for i in tqdm(range(df.shape[0]), desc="inserting country nodes"):
+            for i in tqdm(range(df.shape[0]), desc="inserting country nodes", disable=True):
                 
                 if i == self.max_reads:
                     break
@@ -188,7 +188,7 @@ class TerroristNeo4JDatabase:
 
         with driver.session() as session:
 
-            for query in tqdm(queries, desc="Thread {} on {} queries".format(i, len(queries))):
+            for query in tqdm(queries, desc="Thread {} on {} queries".format(i, len(queries)), disable=True):
                 session.run(query)
         
         driver.close()
@@ -209,7 +209,7 @@ class TerroristNeo4JDatabase:
 
         queries = np.array_split(queries, self.n_threads)
         
-        print("\nMultithreading with {} threads over {} events\n".format(self.n_threads, self.max_reads))
+        # print("\nMultithreading with {} threads over {} events\n".format(self.n_threads, self.max_reads))
 
         threads = [threading.Thread(target=self._thread_event, args=(queries[i], i,)) for i in range(len(queries))]
         
@@ -226,8 +226,8 @@ class TerroristNeo4JDatabase:
         threads = None
         gc.collect()
 
-        print("\n\nDone!")
-        print("Time taken with {} threads and {} events: {}\n\n".format(self.n_threads, self.max_reads, end - start))
+        # print("\n\nDone!")
+        # print("Time taken with {} threads and {} events: {}\n\n".format(self.n_threads, self.max_reads, end - start))
                 
 
 
@@ -251,3 +251,7 @@ if __name__ == "__main__":
     elif args == "ic":
         db.insert_all_countries()
     
+    elif args == "all":
+        db.insert_all_countries()
+        db.insert_all_events()
+        db.create_relationships()
