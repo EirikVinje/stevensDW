@@ -73,6 +73,9 @@ class TerroristNeo4JDatabase:
 
                 elif isinstance(value, int):
                     querydict += f"{key} : {value}, "
+
+                elif isinstance(value, float):
+                    querydict += f"{key} : {int(value)}, "
         
         querydict = querydict[:-2] + "}"
         
@@ -82,9 +85,15 @@ class TerroristNeo4JDatabase:
 
 
     def _match_query(self, node : str, node_to, key : str, key_to : str, relationship : str, value):
+        
+        if isinstance(value, str):
+            value = f"'{value}'"
 
-        nk1 =  "(" + f"a:{node}" + " " "{" + f"{key} : '{value}'" + "}" + ")"
-        nk2 =  "(" + f"b:{node_to}" + " " "{" + f"{key_to} : '{value}'" + "}" + ")"
+        elif isinstance(value, int):
+            value = value
+
+        nk1 =  "(" + f"a:{node}" + " " "{" + f"{key} : {value}" + "}" + ")"
+        nk2 =  "(" + f"b:{node_to}" + " " "{" + f"{key_to} : {value}" + "}" + ")"
         
         relationship = f"(a)-[:{relationship}]->(b)"
 
@@ -221,10 +230,11 @@ class TerroristNeo4JDatabase:
         print("Time taken with {} threads and {} events: {}\n\n".format(self.n_threads, self.max_reads, end - start))
                 
 
+
 if __name__ == "__main__":
 
     datapath = "/home/eirik/projects/stevensDW/data/terrorismdb_no_doubt.csv"
-    max_reads = 10_000
+    max_reads = -1
     db = TerroristNeo4JDatabase(datapath, max_reads)
     
     args = sys.argv[-1]
