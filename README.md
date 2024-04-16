@@ -19,22 +19,15 @@ $ cd dw/
 $ sudo docker-compose up -d
 ```
 
-## To run MySQL databases odb and dw after docker-compose
+## To run MySQL database after docker-compose
 ```rst
-$ sudo docker exec -it dw_mysql-odb-server_1 bash
+$ sudo docker exec -it dw_mysql-server_1 bash
 $ mysql -p
 $ CREATE USER 'dbuser'@'%' IDENTIFIED BY 'secret';
-$ GRANT ALL PRIVILEGES ON odb.* to 'dbuser'@'%';
+$ GRANT ALL PRIVILEGES ON db.* to 'dbuser'@'%';
 $ exit
 $ exit
-$ sudo docker exec -it dw_mysql-dw-server_1 bash
-$ mysql -p
-$ CREATE USER 'dbuser'@'%' IDENTIFIED BY 'secret';
-$ GRANT ALL PRIVILEGES ON dw.* to 'dbuser'@'%';
-$ exit
-$ exit
-$ python prepare_sql.py
-$ python populate_sql.py
+$ python init_sql.py
 ```
 
 ## In browser, access databases

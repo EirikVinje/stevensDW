@@ -8,10 +8,10 @@ from mysql.connector import Error
 class TerroristSQLDatabase:
     def __init__(self, path):
 
-        DB_USER = 'dbuser'
-        DB_PASSWORD = 'secret'
-        DB_HOST = 'localhost' 
-        DB_NAME = 'mysql-server'
+        self.DB_USER = 'dbuser'
+        self.DB_PASSWORD = 'secret'
+        self.DB_HOST = 'localhost' 
+        self.DB_NAME = 'db'
 
         self.raw = pl.read_csv(path, infer_schema_length=0)
 
@@ -42,23 +42,92 @@ class TerroristSQLDatabase:
             pl.col("nkill").cast(pl.Float64),
             pl.col("nwound").cast(pl.Float64),
             pl.col("property").cast(pl.Int64)
-        )
+            )
+
+        try:
+            conn = mysql.connector.connect(host=self.DB_HOST, 
+                                    port=13306, 
+                                    user=self.DB_USER,
+                                    password=self.DB_PASSWORD)
+            if conn.is_connected():
+                    print('Connected to MySQL database')
+        
+            cursor = conn.cursor()
+            cursor.execute(f"USE {self.DB_NAME}")
+            print(f"Database {self.DB_NAME} is connected")
+
+            if conn is not None and conn.is_connected():
+                cursor.close()
+                conn.close()
+
+        except:            
+            conn = None
+            create_db = " CREATE DATABASE db"
+            use_db = "use db"
+            create_region = "CREATE TABLE region (region_id INT NOT NULL PRIMARY KEY, " \
+                            "region VARCHAR(100))"
+            create_country = "CREATE TABLE country (country_id INT NOT NULL PRIMARY KEY, " \
+                            "country VARCHAR(100), region_id INT, FOREIGN KEY (region_id) REFERENCES region(region_id))"   
+            create_provstate = "CREATE TABLE provstate (provstate_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
+                            "provstate VARCHAR(100), country_id INT, FOREIGN KEY (country_id) REFERENCES country(country_id))" 
+            create_city = "CREATE TABLE city (city_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
+                            "city VARCHAR(100), provstate_id INT, FOREIGN KEY (provstate_id) REFERENCES provstate(provstate_id))"   
+            create_target = "CREATE TABLE target (target_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
+                            "target VARCHAR(400), targettype_id INT, targettype VARCHAR(100))"
+            create_event = "CREATE TABLE event (event_id BIGINT NOT NULL PRIMARY KEY, " \
+                            "year INT, month INT, day INT, crit1 INT, crit2 INT, crit3 INT, success INT, suicide INT, attacktype_id INT, attacktype VARCHAR(100), gname VARCHAR(400), " \
+                            "individual INT, nkill INT, nwound INT, property INT, city_id INT, provstate_id INT, country_id INT, region_id INT, target_id INT, " \
+                            "FOREIGN KEY (city_id) REFERENCES city(city_id), FOREIGN KEY (provstate_id) REFERENCES provstate(provstate_id), FOREIGN KEY (region_id) REFERENCES region(region_id), " \
+                            "FOREIGN KEY (country_id) REFERENCES country(country_id), FOREIGN KEY (target_id) REFERENCES target(target_id))"
+
+            try:
+                conn = mysql.connector.connect(host='localhost', 
+                                        port=13306, 
+                                        user='dbuser',
+                                        password='secret')
+                if conn.is_connected():
+                        print('Connected to database, creating tables...')
+            
+                cursor = conn.cursor()
+                cursor.execute(create_db)
+                cursor.execute(use_db)
+                cursor.execute(create_region)
+                cursor.execute(create_country)
+                cursor.execute(create_provstate)
+                cursor.execute(create_city)
+                cursor.execute(create_target)
+                cursor.execute(create_event)
+                
+                conn.commit()
+
+                print('Database is prepared')
+                
+                    
+            except Error as e:
+                print(e)
+                
+            finally:
+                if conn is not None and conn.is_connected():
+                    cursor.close()
+                    conn.close()
 
     def drop_table(self, table_name : str):
         conn = None
         drop_query = f"DROP TABLE {table_name}"
 
         try:
-            conn = mysql.connector.connect(host='localhost', 
+            conn = mysql.connector.connect(host=self.DB_HOST, 
                                     port=13306, 
-                                    user='dbuser',
-                                    password='secret')
+                                    database = self.DB_NAME,
+                                    user=self.DB_USER,
+                                    password=self.DB_PASSWORD)
             if conn.is_connected():
-                    print('Connected to MySQL database')
+                    print('Connected to database, dropping table', table_name)
         
             cursor = conn.cursor()
-            cursor.execute("use db")
             cursor.execute(drop_query)
+
+            print(table_name,' is dropped')
         
         except Error as e:
             print(e)
@@ -74,15 +143,15 @@ class TerroristSQLDatabase:
         read_query = f"SELECT * FROM {table_name}"
 
         try:
-            conn = mysql.connector.connect(host='localhost', 
+            conn = mysql.connector.connect(host=self.DB_HOST, 
                                     port=13306, 
-                                    user='dbuser',
-                                    password='secret')
+                                    database = self.DB_NAME,
+                                    user=self.DB_USER,
+                                    password=self.DB_PASSWORD)
             if conn.is_connected():
-                    print('Connected to MySQL database')
+                    print('Connected to database, selecting', table_name)
         
             cursor = conn.cursor()
-            cursor.execute("use db")
             res = cursor.execute(read_query)
             for row in res:
                 print(row)
@@ -95,82 +164,25 @@ class TerroristSQLDatabase:
                 cursor.close()
                 conn.close()
     
-    def prepare_db(self):
-        # Connect to MySQL database
-        conn = None
-        create_db = " CREATE DATABASE db"
-        use_db = "use db"
-        create_region = "CREATE TABLE region (region_id INT NOT NULL PRIMARY KEY, " \
-                        "region VARCHAR(100))"
-        create_country = "CREATE TABLE country (country_id INT NOT NULL PRIMARY KEY, " \
-                        "country VARCHAR(100), region_id INT, FOREIGN KEY (region_id) REFERENCES region(region_id))"   
-        create_provstate = "CREATE TABLE provstate (provstate_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
-                        "provstate VARCHAR(100), country_id INT, FOREIGN KEY (country_id) REFERENCES country(country_id))" 
-        create_city = "CREATE TABLE city (city_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
-                        "city VARCHAR(100), provstate_id INT, FOREIGN KEY (provstate_id) REFERENCES provstate(provstate_id))"   
-        create_target = "CREATE TABLE target (target_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
-                        "target VARCHAR(400), targettype_id INT, targettype VARCHAR(100))"
-        create_event = "CREATE TABLE event (event_id BIGINT NOT NULL PRIMARY KEY, " \
-                        "year INT, month INT, day INT, crit1 INT, crit2 INT, crit3 INT, success INT, suicide INT, attacktype_id INT, attacktype VARCHAR(100), gname VARCHAR(400), " \
-                        "individual INT, nkill INT, nwound INT, property INT, city_id INT, provstate_id INT, country_id INT, region_id INT, target_id INT, " \
-                        "FOREIGN KEY (city_id) REFERENCES city(city_id), FOREIGN KEY (provstate_id) REFERENCES provstate(provstate_id), FOREIGN KEY (region_id) REFERENCES region(region_id), " \
-                        "FOREIGN KEY (country_id) REFERENCES country(country_id), FOREIGN KEY (target_id) REFERENCES target(target_id))"
-
-        try:
-            conn = mysql.connector.connect(host='localhost', 
-                                    port=13306, 
-                                    user='dbuser',
-                                    password='secret')
-            if conn.is_connected():
-                    print('Connected to MySQL database')
-        
-            cursor = conn.cursor()
-            cursor.execute(create_db)
-            cursor.execute(use_db)
-            cursor.execute(create_region)
-            cursor.execute(create_country)
-            cursor.execute(create_provstate)
-            cursor.execute(create_city)
-            cursor.execute(create_target)
-            cursor.execute(create_event)
-            
-            conn.commit()
-
-            print('ODB is prepared')
-            
-                
-        except Error as e:
-            print(e)
-            
-        finally:
-            if conn is not None and conn.is_connected():
-                cursor.close()
-                conn.close()
-    
-    def populate_odb(input_data):
-        # Connect to MySQL database
+    def populate_db(self, input_data : pl.DataFrame):
         conn = None
 
         query_region = "INSERT INTO region(region_id,region) " \
-                "VALUES(%s,%s)"
-        #tuples_region = [(1,'Oslo Fylke', 1),(2,'Eastern US', 2)]    
+                "VALUES(%s,%s)" 
         tuples_region = []
 
 
         query_country = "INSERT INTO country(country_id,country, region_id) " \
                 "VALUES(%s,%s,%s)"
-        #tuples_country = [(1,'Norway'),(2,'USA')]
         tuples_country = []      
         
 
         query_provstate = "INSERT INTO provstate(provstate_id,provstate, country_id) " \
                 "VALUES(%s,%s,%s)"
-        #tuples_provstate = [(1,'Oslo Kommune', 1),(2,'New York', 2)]
         tuples_provstate = []
 
         query_city = "INSERT INTO city(city_id,city, provstate_id) " \
                 "VALUES(%s,%s,%s)"
-        #tuples_city = [(1,'Oslo', 1),(2,'New York City', 2)]
         tuples_city = []
 
         query_target = "INSERT INTO target(target_id,target, targettype_id, targettype) " \
@@ -206,10 +218,7 @@ class TerroristSQLDatabase:
                 provstateids[f'{provstate},{countryid}'] = provstateid
                 tuples_provstate.append((provstateid,provstate,countryid))
 
-            #if (provstateid, provstate,countryid) not in tuples_provstate:
-
             city = input_data['city'][i]
-            #provstateid = provstateids[f'{provstate},{countryid}']
             try:
                 if cityids[f'{provstate},{city}'] != None:
                     cityid = cityids[f'{provstate},{city}']
@@ -217,10 +226,6 @@ class TerroristSQLDatabase:
                 cityid = len(cityids)+1
                 cityids[f'{provstate},{city}'] = cityid
                 tuples_city.append((cityid,city,provstateid))
-            
-            #if (city,provstateid) not in tuples_city:
-            #   cityids[f'{provstate},{city}'] = len(cityids)+1
-            #  tuples_city.append((city,provstateid))
             
             target = input_data['target'][i]
             targettype = input_data['targettype'][i]
@@ -257,19 +262,15 @@ class TerroristSQLDatabase:
                 targetid))
 
         try:  
-            conn = mysql.connector.connect(host='localhost',
+            conn = mysql.connector.connect(host=self.DB_HOST, 
                                     port=13306, 
-                                    database = 'odb',
-                                    user='dbuser',
-                                    password='secret')
+                                    database = self.DB_NAME,
+                                    user=self.DB_USER,
+                                    password=self.DB_PASSWORD)
             if conn.is_connected():
-                    print('Connected to MySQL database')
+                    print('Connected to database, populating tables...')
             
             cursor = conn.cursor()
-            #print(tuples_region)
-            #print(tuples_country)
-            #print(tuples_provstate)
-            #print(tuples_city)
             
             for tuple in tqdm(tuples_region):
                 cursor.execute(query_region,tuple)
@@ -291,10 +292,10 @@ class TerroristSQLDatabase:
             
             conn.commit()
             
-            cursor.execute("SELECT count(*) FROM country")
+            cursor.execute("SELECT count(*) FROM event")
             res = cursor.fetchone()
         
-            print('ODB is populated: {} new tuples are inserted'.format(len(tuples_country)+len(tuples_region)+len(tuples_provstate)+len(tuples_city)+len(tuples_target)+len(tuples_event)))
+            print('DB is populated: {} new tuples are inserted'.format(len(tuples_country)+len(tuples_region)+len(tuples_provstate)+len(tuples_city)+len(tuples_target)+len(tuples_event)))
             print('                  {} total tuples are inserted'.format(res[0]))    
             
                 
@@ -306,76 +307,10 @@ class TerroristSQLDatabase:
                 cursor.close()
                 conn.close()
 
-def load_dw():
-    # Connect to MySQL database
-    odb_conn = None
-    dw_conn = None
-    adb_load_query = "INSERT INTO fact(fact_id, country, total_attacks) " \
-                     "VALUES(%s,%s,%s)"
-    odb_aggregate_query = "SELECT c.country, count(e.event_id) "\
-                          " FROM country c AND event e "\
-                          " GROUP BY c.country"    
-                                     
-    try:  
-        odb_conn = mysql.connector.connect(host='localhost', 
-                                  port=13306, 
-                                  database = 'odb',
-                                  user='dbuser',
-                                  password='secret')
-        
-        dw_conn = mysql.connector.connect(host='localhost',
-                                  port=23306, 
-                                  database = 'dw',
-                                  user='dbuser',
-                                  password='secret')
-        
-        if odb_conn.is_connected():
-                print('Connected to source ODB MySQL database')
-                
-        if dw_conn.is_connected():
-                print('Connected to destination DW MySQL database')
-        
-        odb_cursor = odb_conn.cursor()
-        dw_cursor = dw_conn.cursor()
-        
-        odb_cursor.execute(odb_aggregate_query)
-        aggr_tuples = odb_cursor.fetchall()
-    
-        dw_cursor.executemany(adb_load_query,aggr_tuples)
-        
-        dw_conn.commit()
-        
-        dw_cursor.execute("SELECT count(*) FROM fact")
-        res = dw_cursor.fetchone()
-    
-        print('DW is loaded: {} new tuples are inserted'.format(len(aggr_tuples)))
-        print('               {} total tuples are inserted'.format(res[0]))    
-        
-            
-    except Error as e:
-        print(e)
-        
-    finally:
-        if odb_conn is not None and odb_conn.is_connected():
-            odb_cursor.close()
-            odb_conn.close()
-        if dw_conn is not None and dw_conn.is_connected():
-            dw_cursor.close()
-            dw_conn.close()    
-
 if __name__ == '__main__':
     path = "/home/stiffi/Documents/master_2_sem/IKT453/project/stevensDW/data/terrorismdb_no_doubt.csv"
-    #with open("columns.json", "rb") as f:
-    #        columns = json.load(f)
-    #columns = columns['columns']
+    db = TerroristSQLDatabase(path)
+    #db.populate_db(db.raw)
+    db.read_data('country')
 
-    #print(columns)
-
-    print(input_data.dtypes)
-    #input_data = input_data[columns]
-    #print(input_data)
-    #print(len(input_data))
-
-    #populate_odb(input_data)
-    load_dw()
     
