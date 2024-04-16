@@ -36,3 +36,10 @@ $ python init_sql.py
 - MySQL-odb : localhost:15000
 - MySQL-dw: localhost:25000
 - Mongodb : 
+
+
+## Features available:
+- (get all events for all countries)
+- get_num_events_all_countries(): get number of events in all countries
+- get_events_by_country(): get events in specific country
+- get_events_with_criteria(): TABLE WITH COUNTRY, START YEAR, END YEAR, ATTACKTYPE, TARGETTYPE, SUCCESS
