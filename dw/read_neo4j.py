@@ -119,9 +119,26 @@ class TerroristNeo4JDatabase:
         return df
 
 
-    def get_events_with_criteria(self, COUNTRY, START_YEAR, END_YEAR, ATTACKTYPE, TARGETTYPE, SUCCESS):
-        pass
+    def get_events_with_criteria(self, country : str, start_year : int, end_year : int, attacktype : int, targettype : int, success : int):
+        
 
+        driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
+
+        with driver.session() as session:
+
+            query = f"""
+                    MATCH (e:Event)
+                    WHERE e.country = '{country}' AND e.year >= {start_year} AND e.year <= {end_year}
+                    AND e.attacktype = {attacktype} AND e.targettype = {targettype} AND e.success = {success}
+                    RETURN e
+                    """
+            
+            result = session.run(query)
+
+            for res in result:
+                print(res.data())
+
+        driver.close()
 
 if __name__ == "__main__":
 
