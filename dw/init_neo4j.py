@@ -199,7 +199,7 @@ class TerroristNeo4JDatabase:
         df = self.raw
         queries = []
         
-        for i in tqdm(range(df.shape[0]), desc="Creating queries"):
+        for i in tqdm(range(df.shape[0]), desc="Creating queries", disable=True):
             
             query = self._create_query("Event", ["event_id", "year", "country_id", "country", "region_id", "region", "provstate", "city", "crit1", "crit2", "crit3", "doubtterr", "success", "suicide", "attacktype_id", "attacktype", "targettype_id", "targettype", "target", "gname", "individual", "nkill", "nwound", "property"], df[i])
             queries.append(query)
