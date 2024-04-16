@@ -26,7 +26,7 @@ class TerroristNeo4JDatabase:
 
     def custom_query(self):
 
-        query = input("QUERY: ")
+        query = "Match (c:Country {}) Return c.country".format("{country : 'Norway'}")
 
         driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
 
@@ -107,20 +107,8 @@ class TerroristNeo4JDatabase:
             query = "MATCH (e:{} {}) RETURN e".format(node, "{" + f"{key} : {value}" + "}")
 
             result = session.run(query)
-            
-            df = []
-
-            for r in result:
-                r = r.data()["e"]
-                a3 = self._get_alpha_3(r["country"])
-
-                if a3 is None:
-                    return None
-
-                r["iso_alpha"] = a3 
-                df.append(r)
-
-            df = pl.DataFrame(df)
+        
+            df = pl.DataFrame([r.data()["e"] for r in result])
 
             end_t = time.time()
 
@@ -131,10 +119,14 @@ class TerroristNeo4JDatabase:
         return df
 
 
+    def get_events_with_criteria(self, COUNTRY, START_YEAR, END_YEAR, ATTACKTYPE, TARGETTYPE, SUCCESS):
+        pass
+
+
 if __name__ == "__main__":
 
     db = TerroristNeo4JDatabase()
     
     # db.get_num_events_all_countries()
     # db.get_events_by_country("Iraq")
-    # db.custom_query()
+    db.custom_query()
