@@ -115,18 +115,45 @@ class TerroristNeo4JDatabase:
             return df
         
 
-    def get_events_with_criteria(self, country : str, start_year : int, end_year : int, attacktype : str, targettype : str, success : int):
+    def get_events_with_criteria(self, country : str = None, start_year : int = None, end_year : int = None, attacktype : str = None, targettype : str = None, success : int = None):
         
+        constraints = [country, attacktype, targettype, success]
+        constraints_str = ["country", "attacktype", "targettype", "success"]
+
         driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
 
         with driver.session() as session:
             
             start_t = time.time()
+            
+            constraints_statement = "WHERE"
+            for i in range(len(constraints)):
+                if constraints[i] is not None:
+
+                    constraints_statement += f" e.{constraints_str[i]} = "
+
+                    if isinstance(constraints[i], int):
+                        constraints_statement += f"{constraints[i]} AND"
+
+                    elif isinstance(constraints[i], str):
+                        constraints_statement += f"'{constraints[i]}' AND"
+            
+
+            if start_year is not None:
+                constraints_statement += f" e.year >= {start_year} AND"
+
+            if end_year is not None:
+                constraints_statement += f" e.year <= {end_year} AND"
+            
+            if constraints_statement != "WHERE":
+                constraints_statement = constraints_statement[:-4]
+            
+            else:
+                constraints_statement = ""
 
             query = f"""
                     MATCH (e:Event)
-                    WHERE e.country = '{country}' AND e.year >= {start_year} AND e.year <= {end_year}
-                    AND e.attacktype = '{attacktype}' AND e.targettype = '{targettype}' AND e.success = {success}
+                    {constraints_statement}
                     RETURN e.year as year, 
                            e.month as month, 
                            e.day as day, 
@@ -150,8 +177,6 @@ class TerroristNeo4JDatabase:
 
             df = pl.DataFrame([r.data() for r in result])
 
-            print(df)    
-
             end_t = time.time()
 
             print(f"Time to run query: {end_t - start_t}")
@@ -163,7 +188,9 @@ if __name__ == "__main__":
 
     db = TerroristNeo4JDatabase()
     
-    db.get_num_events_all_countries()
+    # db.get_num_events_all_countries()
     # db.get_events_by_country("Iraq")
     # db.custom_query()
-    # db.get_events_with_criteria(country="Norway", start_year=2000, end_year=2020, attacktype=2, targettype=14, success=1)
+    
+    db.get_events_with_criteria(country="Norway", start_year=2010, end_year=2015, attacktype="Armed Assault", targettype="Private Citizens and Property", success=1)
+    # db.get_events_with_criteria()
