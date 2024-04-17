@@ -4,6 +4,7 @@ import dash_mantine_components as dmc
 import dash_dependencies.callbacks
 import dash_bootstrap_components as dbc
 import plotly.express as px
+import dash_dependencies.callbacks as callbacks
 
 
 
@@ -13,6 +14,7 @@ import plotly.express as px
 # Register the page to be home page
 dash.register_page(__name__, path="/")
 
+geomap, pie1, pie2 = callbacks.init_geomap()
 
 layout = html.Div([
 
@@ -25,22 +27,28 @@ layout = html.Div([
 
                     dbc.Row([
 
-                            dbc.Col(dcc.Graph(id='geomap', config = {'scrollZoom':False}, hoverData={'points': [{'customdata': 'Japan'}]}), width=8, className='geomapSpace', style={'border':'1px solid black'}),
-                            dbc.Col(html.Div([dcc.Graph(id='geograph1'), dcc.Graph(id='geograph2')]), width={"size": 4,"offset": 8}, className='geographSpace')    
+                            dbc.Col(dcc.Graph(figure=geomap, id='geomap', config = {'scrollZoom':False}), width=8, className='geomapSpace', style={'border':'1px solid black'}),
+                            dbc.Col(html.Div([dcc.Graph(figure=pie1, id='geograph1'), dcc.Graph(figure=pie2, id='geograph2')]), width={"size": 4,"offset": 8}, className='geographSpace')    
 
                             ], className='geoSpace'),
 
-                    html.Br(),
 
                     html.Div([
-                        dcc.Dropdown(
-                                    value=2007,
-                                    options=px.data.gapminder()['year'].unique(),
-                                    id='geomap-year-slider'),
 
-                        html.Br(),
 
-                        html.Div(id='hover-value')
+                            dcc.RadioItems(['MongoDB', 'NoSQL','Neo4J'], inline=True, id='radioDB'),
+                            html.Br(),
+                            dbc.Row([
+
+                            ], id='queryDropdowns'),
+                            
+                            html.Br(),
+
+                            dbc.Row(id='tableDropdown'),
+
+                            html.Br(),
+
+                            html.Div(id='queryTable', className='tableSpace')
 
                             ], className='inputSpace'),
 
