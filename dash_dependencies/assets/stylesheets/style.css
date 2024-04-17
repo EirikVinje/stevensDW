@@ -88,13 +88,22 @@ header h1{
     overflow: hidden;
 }
 
+.tableSpace {
+    width: 95.5vw;
+    height: 30vh;
+    overflow-y: scroll;
+    overflow-x: scroll;
+    align-items: center;
+
+}
+
 
 .geographSpace{
     position: absolute;
     background-color: rgb(255, 255, 255);
     z-index: 1;
     height: 70vh;
-    width: 35vw;
+    width: 33.5vw;
 }
 
 .geomapSpace {

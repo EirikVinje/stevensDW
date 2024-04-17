@@ -40,9 +40,15 @@ layout = html.Div([
                             html.Br(),
                             dbc.Row([
 
-                            ], id='queryDropdowns')
+                            ], id='queryDropdowns'),
                             
+                            html.Br(),
 
+                            dbc.Row(id='tableDropdown'),
+
+                            html.Br(),
+
+                            html.Div(id='queryTable', className='tableSpace')
 
                             ], className='inputSpace'),
 

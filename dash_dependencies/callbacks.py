@@ -1,5 +1,5 @@
 
-from dash import Dash, html, dcc, Input, Output, callback, dash_table, ctx
+from dash import Dash, html, dcc, Input, Output, callback, dash_table, ctx, State
 import plotly.express as px
 
 from pymongo import MongoClient
@@ -164,6 +164,8 @@ def update_geograph(clickData, DB):
 
 @callback(
         Output('queryDropdowns', 'children'),
+        Output('tableDropdown', 'children'),
+
         Input('radioDB', 'value'),
         prevent_initial_call=True
 )       
@@ -172,16 +174,16 @@ def get_dropdowns(DB):
 
         if DB=='MongoDB':
             db = TerroristMongoDBDatabase("data/terrorismdb_no_doubt.csv")
-            df = db.get_num_events_all_countries()
+            df = db.get_events_with_criteria()
 
-            children = [dbc.Col([dcc.Dropdown(options=list(df['country']), value='United States', id='dropdownCounty')], width=2),
-                        dbc.Col([dcc.Dropdown(placeholder='Start Year')], width=2, id='dropdownSY'),
-                        dbc.Col([dcc.Dropdown(placeholder='End Year')], width=2, id='dropdownEY'),
-                        dbc.Col([dcc.Dropdown(placeholder='Attack Type')], width=2, id='dropdownAT'),
-                        dbc.Col([dcc.Dropdown(placeholder='Target Type')], width=2, id='dropdownTT'),
-                        dbc.Col([dcc.Dropdown(placeholder='Sucsess')], width=2, id='dropdownSucsess')]
+            children = [dbc.Col([dcc.Dropdown(options=list(df['country'].unique()), value='United States', id='dropdownCounty')], width=2),
+                        dbc.Col([dcc.Dropdown(placeholder='Start Year', id='dropdownSY')], width=2),
+                        dbc.Col([dcc.Dropdown(placeholder='End Year', id='dropdownEY')], width=2),
+                        dbc.Col([dcc.Dropdown(placeholder='Attack Type', id='dropdownAT')], width=2),
+                        dbc.Col([dcc.Dropdown(placeholder='Target Type',  id='dropdownTT')], width=2),
+                        dbc.Col([dcc.Dropdown(placeholder='Sucsess',  id='dropdownSucsess')], width=2)]
         
-        return children
+        return children, [dbc.Col(dcc.Dropdown(list(df.columns), list(df.columns)[0:5], multi=True, id='tableColumns'), width=6)]
 
 
 
@@ -191,7 +193,7 @@ def get_dropdowns(DB):
         prevent_initial_call=True
 )       
 
-def update_dropdown(clickData):
+def update_dropdown_from_geo(clickData):
 
     if clickData is None:
         clickCountry='United States'
@@ -203,4 +205,52 @@ def update_dropdown(clickData):
     if trigger_id == "geomap":
 
         return clickCountry
-     
+    
+
+@callback(
+        Output('queryTable', 'children'),
+        
+        Output('dropdownSY', 'options'),
+        Output('dropdownEY', 'options'),
+        Output('dropdownAT', 'options'),
+        Output('dropdownTT', 'options'),
+        Output('dropdownSucsess', 'options'),
+
+        Input('radioDB', 'value'),
+        Input('dropdownCounty', 'value'),
+
+        Input('dropdownSY', 'value'),
+        Input('dropdownEY', 'value'),
+        Input('dropdownAT', 'value'),
+        Input('dropdownTT', 'value'),
+        Input('dropdownSucsess', 'value'),
+        Input('tableColumns', 'value'),
+        
+        prevent_initial_call=False
+
+)
+
+def update_dropdowns(DB, dropdownCounty, dropdownSY, dropdownEY, dropdownAT, dropdownTT, dropdownSucsess, tableColumns):
+
+    if DB=='MongoDB':
+        db = TerroristMongoDBDatabase("data/terrorismdb_no_doubt.csv")
+        df = db.get_events_with_criteria(country=dropdownCounty, start_year=dropdownSY, end_year=dropdownEY, attack_type=dropdownAT, target_type=dropdownTT, success=dropdownSucsess)
+
+    else:
+        assert False
+
+
+    dff = df.to_pandas()
+    dff = dff[tableColumns]
+
+    years_range = df['year'].unique()
+    at_range = df['attacktype'].unique()
+    tt_range = df['targettype'].unique()
+    sucsess_range = df['success'].unique()
+
+
+    return dash_table.DataTable(dff.to_dict('records'), [{"name": i, "id": i} for i in dff.columns], fill_width=True), list(years_range), list(years_range), list(at_range), list(tt_range), list(sucsess_range)
+
+
+
+
