@@ -1,4 +1,5 @@
 import json
+import datetime
 import pycountry_convert
 import mysql.connector
 import polars as pl
@@ -12,7 +13,7 @@ class TerroristSQLDatabase:
         self.DB_USER = 'dbuser'
         self.DB_PASSWORD = 'secret'
         self.DB_HOST = 'localhost' 
-        self.DB_NAME = 'db'
+        self.DB_NAME = 'dw'
 
         self.raw = pl.read_csv(path, infer_schema_length=0)
 
@@ -50,21 +51,20 @@ class TerroristSQLDatabase:
                                     port=13306, 
                                     user=self.DB_USER,
                                     password=self.DB_PASSWORD)
-            if conn.is_connected():
-                    print('Connected to MySQL database')
         
             cursor = conn.cursor()
-            cursor.execute(f"USE {self.DB_NAME}")
-            print(f"Database {self.DB_NAME} is connected")
+            cursor.execute(f"USE odb")
+            print(f"Database odb is connected")
 
             if conn is not None and conn.is_connected():
                 cursor.close()
                 conn.close()
+                
 
         except:            
             conn = None
-            create_db = " CREATE DATABASE db"
-            use_db = "use db"
+            create_db = " CREATE DATABASE odb"
+            use_db = "use odb"
             create_region = "CREATE TABLE region (region_id INT NOT NULL PRIMARY KEY, " \
                             "region VARCHAR(100))"
             create_country = "CREATE TABLE country (country_id INT NOT NULL PRIMARY KEY, " \
@@ -87,7 +87,7 @@ class TerroristSQLDatabase:
                                         user='dbuser',
                                         password='secret')
                 if conn.is_connected():
-                        print('Connected to database, creating tables...')
+                        print('Connected to odb, creating tables...')
             
                 cursor = conn.cursor()
                 cursor.execute(create_db)
@@ -101,7 +101,7 @@ class TerroristSQLDatabase:
                 
                 conn.commit()
 
-                print('Database is prepared')
+                print('ODB is prepared')
                 
                     
             except Error as e:
@@ -111,6 +111,53 @@ class TerroristSQLDatabase:
                 if conn is not None and conn.is_connected():
                     cursor.close()
                     conn.close()
+            self.populate_db(self.raw)
+        try:
+            conn = mysql.connector.connect(host='localhost', 
+                                    port=23306, 
+                                    user='dbuser',
+                                    password='secret')
+        
+            cursor = conn.cursor()
+            cursor.execute(f"USE dw")
+            print(f"Database {self.DB_NAME} is connected")
+
+            if conn is not None and conn.is_connected():
+                cursor.close()
+                conn.close()
+        except:
+            conn = None
+            create_db = " CREATE DATABASE dw"
+            use_db = "use dw"
+            create_table = "CREATE TABLE fact (fact_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
+                            "year INT, month INT, day INT, crit1 INT, crit2 INT, crit3 INT, success INT, suicide INT, attacktype VARCHAR(100), gname VARCHAR(400), " \
+                            "individual INT, nkill INT, nwound INT, property INT, country VARCHAR(100), region VARCHAR(100), provstate VARCHAR(100), city VARCHAR(100), target VARCHAR(400), targettype VARCHAR(100)) "
+            try:  
+                conn = mysql.connector.connect(host=self.DB_HOST,
+                                        port=23306, 
+                                        user=self.DB_USER,
+                                        password=self.DB_PASSWORD)
+                if conn.is_connected():
+                        print('Connected to MySQL database')
+                
+                cursor = conn.cursor()
+                cursor.execute(create_db)
+                cursor.execute(use_db)
+                cursor.execute(create_table)
+                
+                conn.commit()
+
+                print('DW is prepared')
+                
+                    
+            except Error as e:
+                print(e)
+                
+            finally:
+                if conn is not None and conn.is_connected():
+                    cursor.close()
+                    conn.close()
+                self.load_dw()
 
     def drop_table(self, table_name : str):
         conn = None
@@ -263,7 +310,7 @@ class TerroristSQLDatabase:
         try:  
             conn = mysql.connector.connect(host=self.DB_HOST, 
                                     port=13306, 
-                                    database = self.DB_NAME,
+                                    database = 'odb',
                                     user=self.DB_USER,
                                     password=self.DB_PASSWORD)
             if conn.is_connected():
@@ -306,11 +353,69 @@ class TerroristSQLDatabase:
                 cursor.close()
                 conn.close()
     
+    def load_dw(self):
+        odb_conn = None
+        dw_conn = None
+        adb_load_query = "INSERT INTO fact(year, month, day, crit1, crit2, crit3, success, suicide, attacktype, gname, " \
+                            "individual, nkill, nwound, property, country, region, provstate, city, target, targettype) " \
+                        "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        odb_aggregate_query = "SELECT e.year, e.month, e.day, e.crit1, e.crit2, e.crit3, e.success, e.suicide, e.attacktype, e.gname, "\
+                            "e.individual, e.nkill, e.nwound, e.property, country.country, region.region, provstate.provstate, city.city, target.target, target.targettype " \
+                            "FROM event e, country, region, provstate, city, target "\
+                            "WHERE e.country_id=country.country_id AND e.region_id=region.region_id AND e.provstate_id=provstate.provstate_id AND e.city_id=city.city_id AND e.target_id=target.target_id"    
+                                        
+        try:  
+            odb_conn = mysql.connector.connect(host=self.DB_HOST, 
+                                    port=13306, 
+                                    database = 'odb',
+                                    user=self.DB_USER,
+                                    password=self.DB_PASSWORD)
+            
+            dw_conn = mysql.connector.connect(host=self.DB_HOST, 
+                                    port=23306, 
+                                    database = self.DB_NAME,
+                                    user=self.DB_USER,
+                                    password=self.DB_PASSWORD)
+            
+            if odb_conn.is_connected():
+                    print('Connected to source ODB MySQL database')
+                    
+            if dw_conn.is_connected():
+                    print('Connected to destination DW MySQL database')
+            
+            odb_cursor = odb_conn.cursor()
+            dw_cursor = dw_conn.cursor()
+            
+            odb_cursor.execute(odb_aggregate_query)
+            aggr_tuples = odb_cursor.fetchall()
+        
+            dw_cursor.executemany(adb_load_query,aggr_tuples)
+            
+            dw_conn.commit()
+            
+            dw_cursor.execute("SELECT count(*) FROM fact")
+            res = dw_cursor.fetchone()
+        
+            print('DW is loaded: {} new tuples are inserted'.format(len(aggr_tuples)))
+            print('               {} total tuples are inserted'.format(res[0]))    
+            
+                
+        except Error as e:
+            print(e)
+            
+        finally:
+            if odb_conn is not None and odb_conn.is_connected():
+                odb_cursor.close()
+                odb_conn.close()
+            if dw_conn is not None and dw_conn.is_connected():
+                dw_cursor.close()
+                dw_conn.close()    
+    
     def get_num_events_all_countries(self):
         conn = None
         try:
             conn = mysql.connector.connect(host=self.DB_HOST, 
-                                    port=13306, 
+                                    port=23306, 
                                     database = self.DB_NAME,
                                     user=self.DB_USER,
                                     password=self.DB_PASSWORD)
@@ -350,7 +455,7 @@ class TerroristSQLDatabase:
         conn = None
         try:
             conn = mysql.connector.connect(host=self.DB_HOST, 
-                                    port=13306, 
+                                    port=23306, 
                                     database = self.DB_NAME,
                                     user=self.DB_USER,
                                     password=self.DB_PASSWORD)
@@ -367,9 +472,9 @@ class TerroristSQLDatabase:
             data = []
 
             for i in res:
-                data.append([i])
+                data.append(i)
 
-            df = pl.DataFrame(data, schema=["event",""])
+            df = pl.DataFrame(data, schema=["event","year","month","day","crit1","crit2","crit3","success","suicide","attacktype_id","attacktype","gname","individual","nkill","nwound","property","city_id","provstate_id","country_id","region_id","target_id"])
             print(df)
             
         
@@ -385,15 +490,15 @@ class TerroristSQLDatabase:
         conn = None
         try:
             conn = mysql.connector.connect(host=self.DB_HOST, 
-                                    port=13306, 
+                                    port=23306, 
                                     database = self.DB_NAME,
                                     user=self.DB_USER,
                                     password=self.DB_PASSWORD)
             if conn.is_connected():
-                    print('Connected to database, getting events by country')
+                    print('Connected to database, getting events by region')
         
             cursor = conn.cursor()
-            cursor.execute(f"SELECT event.* FROM event, country WHERE event.country_id=country.country_id AND country.country='{region_name}';")
+            cursor.execute(f"SELECT event.* FROM event, region WHERE event.region_id=region.region_id AND region.region='{region_name}';")
 
             res = cursor.fetchall()
             #for r in res:
@@ -402,9 +507,82 @@ class TerroristSQLDatabase:
             data = []
 
             for i in res:
-                data.append([i])
+                data.append(i)
 
-            df = pl.DataFrame(data, schema=["event",""])
+            df = pl.DataFrame(data, schema=["event","year","month","day","crit1","crit2","crit3","success","suicide","attacktype_id","attacktype","gname","individual","nkill","nwound","property","city_id","provstate_id","country_id","region_id","target_id"])
+            print(df)
+            
+        
+        except Error as e:
+            print(e)
+            
+        finally:
+            if conn is not None and conn.is_connected():
+                cursor.close()
+                conn.close()
+    
+    def get_event_in_country_from_start_to_end(self, country_name, start_year, end_year):
+        conn = None
+        try:
+            conn = mysql.connector.connect(host=self.DB_HOST, 
+                                    port=23306, 
+                                    database = self.DB_NAME,
+                                    user=self.DB_USER,
+                                    password=self.DB_PASSWORD)
+            if conn.is_connected():
+                    print(f'Connected to database, getting events in {country_name} from {start_year} to {end_year}')
+        
+            cursor = conn.cursor()
+            cursor.execute(f"SELECT event.* FROM event, country WHERE event.country_id=country.country_id AND country.country='{country_name}' \
+                            AND event.year BETWEEN {start_year} AND {end_year};")
+
+            res = cursor.fetchall()
+            #for r in res:
+            #    print(r)
+            
+            data = []
+
+            for i in res:
+                data.append(i)
+
+            df = pl.DataFrame(data, schema=["event","year","month","day","crit1","crit2","crit3","success","suicide","attacktype_id","attacktype","gname","individual","nkill","nwound","property","city_id","provstate_id","country_id","region_id","target_id"])
+            print(df)
+            
+        
+        except Error as e:
+            print(e)
+            
+        finally:
+            if conn is not None and conn.is_connected():
+                cursor.close()
+                conn.close()
+        
+    def get_events_with_criteria(self, country, start_year, end_year, attacktype, targettype, success):
+        # return dataframe with the events that matches
+        conn = None
+        try:
+            conn = mysql.connector.connect(host=self.DB_HOST, 
+                                    port=23306, 
+                                    database = self.DB_NAME,
+                                    user=self.DB_USER,
+                                    password=self.DB_PASSWORD)
+            if conn.is_connected():
+                    print(f'Connected to database, getting events in {country} from {start_year} to {end_year}')
+        
+            cursor = conn.cursor()
+            cursor.execute(f"SELECT event.* FROM event, country WHERE event.country_id=country.country_id AND country.country='{country_name}' \
+                            AND event.year BETWEEN {start_year} AND {end_year};")
+
+            res = cursor.fetchall()
+            #for r in res:
+            #    print(r)
+            
+            data = []
+
+            for i in res:
+                data.append(i)
+
+            df = pl.DataFrame(data, schema=["event","year","month","day","crit1","crit2","crit3","success","suicide","attacktype_id","attacktype","gname","individual","nkill","nwound","property","city_id","provstate_id","country_id","region_id","target_id"])
             print(df)
             
         
@@ -416,12 +594,14 @@ class TerroristSQLDatabase:
                 cursor.close()
                 conn.close()
 
+
 if __name__ == '__main__':
     path = "/home/stiffi/Documents/master_2_sem/IKT453/project/stevensDW/data/terrorismdb_no_doubt.csv"
     db = TerroristSQLDatabase(path)
     #db.populate_db(db.raw)
     #db.read_data('country')
-    #db.get_num_events_all_countries()
-    db.get_events_by_country(country_name='Iraq')
-
+    db.get_num_events_all_countries()
+    #db.get_events_by_country(country_name='United States')
+    #db.get_events_by_region(region_name="Central Asia")
+    #db.get_event_in_country_from_start_to_end(country_name="Norway",start_year=2011, end_year=2012)
     

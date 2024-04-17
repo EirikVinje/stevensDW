@@ -55,14 +55,14 @@ class TerroristMongoDBDatabase:
         try:
             db.validate_collection("events")
         except:
-            print("making events")
+            print("Events collection not found, creating...")
             self._create_collection("events")
             self._insert_all_events()
 
         try:
             db.validate_collection("countries")
         except:
-            print("making countries")
+            print("Countries collection not found, creating...")
             self._create_collection("countries")
             self._insert_countries()
 
@@ -181,13 +181,38 @@ class TerroristMongoDBDatabase:
         return df
 
     def get_events_by_country(self, country):
+        """
+        Get number of events for each year for a specific country
+
+        Format:
+        year | num_events | nkill
+        """
 
         client = MongoClient("mongodb://localhost:27017")
         db = client["mongodb_database"]
 
-        result = list(db["events"].find({"country": country}))
-        df = pl.DataFrame(result)
-        df = df.drop("_id")
+        result = db["events"].aggregate(
+            [
+                {
+                    "$match": {
+                        "country": country
+                    }
+                },
+                {
+                    "$group": {
+                        "_id": "$year",
+                        "num_events": {"$sum": 1},
+                        "nkill": {"$sum": "$nkill"}
+                    }
+                }
+            ]
+        )
+
+        data = []
+        for i in result:
+            data.append([i["_id"], i["num_events"], i["nkill"]])
+
+        df = pl.DataFrame(data, schema=["year", "num_events", "nkill"])
 
         return df
 
@@ -195,8 +220,6 @@ class TerroristMongoDBDatabase:
         
         client = MongoClient("mongodb://localhost:27017")
         db = client["mongodb_database"]
-
-        print(country, start_year, end_year, attack_type, target_type, success)
 
         if start_year != None and end_year == None:
             end_year = start_year
@@ -210,22 +233,14 @@ class TerroristMongoDBDatabase:
 
         # remove None values from query
         query = {k: v for k, v in query.items() if v is not None}
-
-        # remove year if not specified
         if "year" in query and query["year"] == {"$gte": None, "$lte": None}:
             del query["year"]
 
-        print(query)
 
         result = list(db["events"].find(query))
         df = pl.DataFrame(result)
         df = df.drop(["_id", "country_id", "region_id", "attacktype_id", "targettype_id"])
         
-        # print(df.columns)
-        # print(df['attacktype'])
-        print(df)
-        assert False
-
         return df
 
 
@@ -242,6 +257,6 @@ if __name__ == "__main__":
     
     args = sys.argv[-1]
     
-    database.get_events_with_criteria("United States", 2001, 2001)
+    print(database.get_events_by_country("United States").sort("year"))
 
     
