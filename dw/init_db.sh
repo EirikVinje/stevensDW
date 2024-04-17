@@ -14,7 +14,7 @@ sleep 10
 echo ""
 echo "Initializing databases..."
 
-python init_neo4j.py ic
+python init_neo4j.py all
 # python init_mongo.py 
 # python init_sql.py
 

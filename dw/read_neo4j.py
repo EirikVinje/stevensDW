@@ -1,7 +1,6 @@
 from neo4j import GraphDatabase
-import polars as pl
 import pycountry_convert
-from tqdm import tqdm
+import polars as pl
 import time
 
 
@@ -26,7 +25,8 @@ class TerroristNeo4JDatabase:
 
     def custom_query(self):
 
-        query = "Match (c:Country {}) Return c.country".format("{country : 'Norway'}")
+        query = "Match (e:Event {}) Return e.day, e.month, e.year".format("{country : 'Iraq'}")
+        # query = input("Enter query: ")
 
         driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
 
@@ -56,8 +56,8 @@ class TerroristNeo4JDatabase:
             
             q = """
                 MATCH (c:Country)-[:HAS_EVENT]->(e:Event)
-                RETURN c.country AS country, count(e) AS count_c
-                ORDER BY count_c DESC
+                RETURN c.country AS country, count(e) AS count
+                ORDER BY count DESC
                 """
 
             res2 = session.run(q)
@@ -65,68 +65,105 @@ class TerroristNeo4JDatabase:
             df = []
             for record in res2:
                 
-                a3 = self._get_alpha_3(record.data()["country"])
+                r = record.data()
+
+                a3 = self._get_alpha_3(r["country"])
 
                 if a3 is None:
                     continue
+                    
+                r["iso_alpha"] = a3
 
-                c_i = {"iso_alpha" : a3,
-                       "count" : record.data()["count_c"],
-                       "country" : record.data()["country"]}
-
-                df.append(c_i)
+                df.append(r)
 
             df = pl.DataFrame(df)
+
+            print(df)
 
             end_t = time.time()
             
             print(f"Time to run query: {end_t - start_t}")
 
-        driver.close()
-
-        return df
+            return df
 
 
-    def get_events_by_country(self, value : str):
+    def get_events_by_country(self, country : str):
         
         start_t = time.time()
-
-        node = "Event"
-        key = "country"
 
         driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
 
         with driver.session() as session:
             
-            if isinstance(value, int):
-                value = value
+            query = f"""
+                    MATCH (c:Country)-[:HAS_EVENT]->(e:Event)
+                    WHERE c.country = '{country}'
+                    RETURN e.year AS year, sum(e.nkill) AS nkill, count(e) as num_events 
+                    ORDER BY year
+                    """
             
-            elif isinstance(value, str):
-                value = f"'{value}'"
-
-            query = "MATCH (e:{} {}) RETURN e".format(node, "{" + f"{key} : {value}" + "}")
-
             result = session.run(query)
         
-            df = pl.DataFrame([r.data()["e"] for r in result])
+            df = pl.DataFrame([r.data() for r in result])
+
+            print(df)
 
             end_t = time.time()
 
-        print(f"Time to run query: {end_t - start_t}")
+            print(f"Time to run query: {end_t - start_t}")
 
-        driver.close()        
+            return df
+        
 
-        return df
+    def get_events_with_criteria(self, country : str, start_year : int, end_year : int, attacktype : int, targettype : int, success : int):
+        
+        driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
 
+        with driver.session() as session:
+            
+            start_t = time.time()
 
-    def get_events_with_criteria(self, COUNTRY, START_YEAR, END_YEAR, ATTACKTYPE, TARGETTYPE, SUCCESS):
-        pass
+            query = f"""
+                    MATCH (e:Event)
+                    WHERE e.country = '{country}' AND e.year >= {start_year} AND e.year <= {end_year}
+                    AND e.attacktype_id = {attacktype} AND e.targettype_id = {targettype} AND e.success = {success}
+                    RETURN e.year as year, 
+                           e.month as month, 
+                           e.day as day, 
+                           e.region as region, 
+                           e.country as country, 
+                           e.provstate as provstate, 
+                           e.city as city, 
+                           e.target as target, 
+                           e.targettype as targettype, 
+                           e.success as success, 
+                           e.suicide as suicide, 
+                           e.attacktype as attacktype, 
+                           e.gname as gname, 
+                           e.nkill as nkill, 
+                           e.nwound as nwound, 
+                           e.individual as individual, 
+                           e.property as property
+                    """
+            
+            result = session.run(query)
+
+            df = pl.DataFrame([r.data() for r in result])
+
+            print(df)    
+
+            end_t = time.time()
+
+            print(f"Time to run query: {end_t - start_t}")
+
+            return df
 
 
 if __name__ == "__main__":
 
     db = TerroristNeo4JDatabase()
     
-    # db.get_num_events_all_countries()
+    db.get_num_events_all_countries()
     # db.get_events_by_country("Iraq")
-    db.custom_query()
+    # db.custom_query()
+    # db.get_events_with_criteria(country="Norway", start_year=2000, end_year=2020, attacktype=2, targettype=14, success=1)

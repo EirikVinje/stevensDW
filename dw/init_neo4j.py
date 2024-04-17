@@ -61,7 +61,10 @@ class TerroristNeo4JDatabase:
         querydict = "{"
         for key, value in zip(columns, values):
             
-            if value is None:
+            if value is None and key in ["nkill", "nwound"]:
+                querydict += f"{key} : 0, "
+            
+            elif value is None:
                 querydict += f"{key} : 'None', "
 
             elif value is not None:
@@ -108,7 +111,7 @@ class TerroristNeo4JDatabase:
 
         with driver.session() as session:
 
-            for query in tqdm(queries, desc="Thread {} on {} queries".format(i, len(queries))):
+            for query in tqdm(queries, desc="Thread {} on {} queries".format(i, len(queries)), disable=True):
                 session.run(query)
         
         driver.close()
@@ -199,9 +202,9 @@ class TerroristNeo4JDatabase:
         df = self.raw
         queries = []
         
-        for i in tqdm(range(df.shape[0]), desc="Creating queries"):
+        for i in tqdm(range(df.shape[0]), desc="Creating queries", disable=True):
             
-            query = self._create_query("Event", ["event_id", "year", "country_id", "country", "region_id", "region", "provstate", "city", "crit1", "crit2", "crit3", "doubtterr", "success", "suicide", "attacktype_id", "attacktype", "targettype_id", "targettype", "target", "gname", "individual", "nkill", "nwound", "property"], df[i])
+            query = self._create_query("Event", ["event_id", "year", "month", "day", "country_id", "country", "region_id", "region", "provstate", "city", "crit1", "crit2", "crit3", "doubtterr", "success", "suicide", "attacktype_id", "attacktype", "targettype_id", "targettype", "target", "gname", "individual", "nkill", "nwound", "property"], df[i])
             queries.append(query)
 
             if i == self.max_reads:
