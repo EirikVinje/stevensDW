@@ -11,6 +11,9 @@ from dw.read_neo4j import TerroristNeo4JDatabase
 import dash_bootstrap_components as dbc
 
 
+Mongodb = TerroristMongoDBDatabase("data/terrorismdb_no_doubt.csv")
+SQLdb = TerroristSQLDatabase("data/terrorismdb_no_doubt.csv")
+Noedb = TerroristNeo4JDatabase()
 
 
 def init_geomap():
@@ -74,16 +77,13 @@ def init_geomap():
 def get_geomap(DB):
 
     if DB=='MongoDB':
-        db = TerroristMongoDBDatabase("data/terrorismdb_no_doubt.csv")
-        df = db.get_num_events_all_countries()
+        df = Mongodb.get_num_events_all_countries()
 
     elif DB=='NoSQL':
-        db = TerroristSQLDatabase("data/terrorismdb_no_doubt.csv")
-        df = db.get_num_events_all_countries()
+        df = SQLdb.get_num_events_all_countries()
 
     elif DB=='Neo4J':
-        db = TerroristNeo4JDatabase()
-        df = db.get_num_events_all_countries()
+        df = Noedb.get_num_events_all_countries()
 
     else:
         assert False
@@ -128,16 +128,13 @@ def update_geograph(clickData, DB):
 
 
     if DB=='MongoDB':
-        db = TerroristMongoDBDatabase("data/terrorismdb_no_doubt.csv")
-        df = db.get_events_by_country(clickCountry)
+        df = Mongodb.get_events_by_country(clickCountry)
 
     elif DB=='NoSQL':
-        db = TerroristSQLDatabase("data/terrorismdb_no_doubt.csv")
-        df = db.get_events_by_country(clickCountry)
+        df = SQLdb.get_events_by_country(clickCountry)
 
     elif DB=='Neo4J':
-        db = TerroristNeo4JDatabase()
-        df = db.get_events_by_country(clickCountry)
+        df = Noedb.get_events_by_country(clickCountry)
 
     else:
         assert False
@@ -191,16 +188,13 @@ def update_geograph(clickData, DB):
 def get_dropdowns(DB):
 
     if DB=='MongoDB':
-        db = TerroristMongoDBDatabase("data/terrorismdb_no_doubt.csv")
-        df = db.get_events_with_criteria()
+        df = Mongodb.get_events_with_criteria()
 
     elif DB=='NoSQL':
-        db = TerroristSQLDatabase("data/terrorismdb_no_doubt.csv")
-        df = db.get_events_with_criteria()
+        df = SQLdb.get_events_with_criteria()
 
     elif DB=='Neo4J':
-        db = TerroristNeo4JDatabase()
-        df = db.get_events_with_criteria()
+        df = Noedb.get_events_with_criteria()
 
     else:
         assert False
@@ -262,16 +256,13 @@ def update_dropdown_from_geo(clickData):
 def update_dropdowns(DB, dropdownCounty, dropdownSY, dropdownEY, dropdownAT, dropdownTT, dropdownSucsess, tableColumns):
 
     if DB=='MongoDB':
-        db = TerroristMongoDBDatabase("data/terrorismdb_no_doubt.csv")
-        df = db.get_events_with_criteria(country=dropdownCounty, start_year=dropdownSY, end_year=dropdownEY, attack_type=dropdownAT, target_type=dropdownTT, success=dropdownSucsess)
+        df = Mongodb.get_events_with_criteria(country=dropdownCounty, start_year=dropdownSY, end_year=dropdownEY, attack_type=dropdownAT, target_type=dropdownTT, success=dropdownSucsess)
 
     elif DB=='NoSQL':
-        db = TerroristSQLDatabase("data/terrorismdb_no_doubt.csv")
-        df = db.get_events_with_criteria(country=dropdownCounty, start_year=dropdownSY, end_year=dropdownEY, attack_type=dropdownAT, target_type=dropdownTT, success=dropdownSucsess)
+        df = SQLdb.get_events_with_criteria(country=dropdownCounty, start_year=dropdownSY, end_year=dropdownEY, attack_type=dropdownAT, target_type=dropdownTT, success=dropdownSucsess)
 
     elif DB=='Neo4J':
-        db = TerroristNeo4JDatabase()
-        df = db.get_events_with_criteria(country=dropdownCounty, start_year=dropdownSY, end_year=dropdownEY, attack_type=dropdownAT, target_type=dropdownTT, success=dropdownSucsess)
+        df = Noedb.get_events_with_criteria(country=dropdownCounty, start_year=dropdownSY, end_year=dropdownEY, attack_type=dropdownAT, target_type=dropdownTT, success=dropdownSucsess)
 
     else:
         assert False
