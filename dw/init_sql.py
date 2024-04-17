@@ -58,8 +58,7 @@ class TerroristSQLDatabase:
 
             if conn is not None and conn.is_connected():
                 cursor.close()
-                conn.close()
-                
+                conn.close()       
 
         except:            
             conn = None
@@ -159,38 +158,12 @@ class TerroristSQLDatabase:
                     conn.close()
                 self.load_dw()
 
-    def drop_table(self, table_name : str):
-        conn = None
-        drop_query = f"DROP TABLE {table_name}"
-
-        try:
-            conn = mysql.connector.connect(host=self.DB_HOST, 
-                                    port=13306, 
-                                    database = self.DB_NAME,
-                                    user=self.DB_USER,
-                                    password=self.DB_PASSWORD)
-            if conn.is_connected():
-                    print('Connected to database, dropping table', table_name)
-        
-            cursor = conn.cursor()
-            cursor.execute(drop_query)
-
-            print(table_name,' is dropped')
-        
-        except Error as e:
-            print(e)
-            
-        finally:
-            if conn is not None and conn.is_connected():
-                cursor.close()
-                conn.close()
-
     def read_data(self, table_name : str):
 
         conn = None
         try:
             conn = mysql.connector.connect(host=self.DB_HOST, 
-                                    port=13306, 
+                                    port=23306, 
                                     database = self.DB_NAME,
                                     user=self.DB_USER,
                                     password=self.DB_PASSWORD)
@@ -423,7 +396,7 @@ class TerroristSQLDatabase:
                     print('Connected to database, getting number of events for all countries')
         
             cursor = conn.cursor()
-            cursor.execute("SELECT country.country, COUNT(event.event_id) count FROM event, country WHERE event.country_id=country.country_id GROUP BY country.country ORDER BY count DESC;")
+            cursor.execute("SELECT country, COUNT(*) count FROM fact GROUP BY country ORDER BY count DESC;")
             res = cursor.fetchall()
             #for r in res:
             #    print(r)
@@ -463,7 +436,7 @@ class TerroristSQLDatabase:
                     print('Connected to database, getting events by country')
         
             cursor = conn.cursor()
-            cursor.execute(f"SELECT event.* FROM event, country WHERE event.country_id=country.country_id AND country.country='{country_name}';")
+            cursor.execute(f"SELECT year, SUM(nkill), COUNT(fact_id) FROM fact WHERE country='{country_name}' GROUP BY year;")
 
             res = cursor.fetchall()
             #for r in res:
@@ -474,78 +447,7 @@ class TerroristSQLDatabase:
             for i in res:
                 data.append(i)
 
-            df = pl.DataFrame(data, schema=["event","year","month","day","crit1","crit2","crit3","success","suicide","attacktype_id","attacktype","gname","individual","nkill","nwound","property","city_id","provstate_id","country_id","region_id","target_id"])
-            print(df)
-            
-        
-        except Error as e:
-            print(e)
-            
-        finally:
-            if conn is not None and conn.is_connected():
-                cursor.close()
-                conn.close()
-    
-    def get_events_by_region(self, region_name : str):
-        conn = None
-        try:
-            conn = mysql.connector.connect(host=self.DB_HOST, 
-                                    port=23306, 
-                                    database = self.DB_NAME,
-                                    user=self.DB_USER,
-                                    password=self.DB_PASSWORD)
-            if conn.is_connected():
-                    print('Connected to database, getting events by region')
-        
-            cursor = conn.cursor()
-            cursor.execute(f"SELECT event.* FROM event, region WHERE event.region_id=region.region_id AND region.region='{region_name}';")
-
-            res = cursor.fetchall()
-            #for r in res:
-            #    print(r)
-            
-            data = []
-
-            for i in res:
-                data.append(i)
-
-            df = pl.DataFrame(data, schema=["event","year","month","day","crit1","crit2","crit3","success","suicide","attacktype_id","attacktype","gname","individual","nkill","nwound","property","city_id","provstate_id","country_id","region_id","target_id"])
-            print(df)
-            
-        
-        except Error as e:
-            print(e)
-            
-        finally:
-            if conn is not None and conn.is_connected():
-                cursor.close()
-                conn.close()
-    
-    def get_event_in_country_from_start_to_end(self, country_name, start_year, end_year):
-        conn = None
-        try:
-            conn = mysql.connector.connect(host=self.DB_HOST, 
-                                    port=23306, 
-                                    database = self.DB_NAME,
-                                    user=self.DB_USER,
-                                    password=self.DB_PASSWORD)
-            if conn.is_connected():
-                    print(f'Connected to database, getting events in {country_name} from {start_year} to {end_year}')
-        
-            cursor = conn.cursor()
-            cursor.execute(f"SELECT event.* FROM event, country WHERE event.country_id=country.country_id AND country.country='{country_name}' \
-                            AND event.year BETWEEN {start_year} AND {end_year};")
-
-            res = cursor.fetchall()
-            #for r in res:
-            #    print(r)
-            
-            data = []
-
-            for i in res:
-                data.append(i)
-
-            df = pl.DataFrame(data, schema=["event","year","month","day","crit1","crit2","crit3","success","suicide","attacktype_id","attacktype","gname","individual","nkill","nwound","property","city_id","provstate_id","country_id","region_id","target_id"])
+            df = pl.DataFrame(data, schema=["year", "nkill", "num_events"])
             print(df)
             
         
@@ -570,8 +472,7 @@ class TerroristSQLDatabase:
                     print(f'Connected to database, getting events in {country} from {start_year} to {end_year}')
         
             cursor = conn.cursor()
-            cursor.execute(f"SELECT event.* FROM event, country WHERE event.country_id=country.country_id AND country.country='{country_name}' \
-                            AND event.year BETWEEN {start_year} AND {end_year};")
+            cursor.execute(f"SELECT year, month, day, region, country, provstate, city, target, targettype, success, suicide, attacktype, gname, individual, nkill, nwound, property FROM fact WHERE country='{country}' AND attacktype='{attacktype}' AND targettype='{targettype}' AND success={success} AND year BETWEEN {start_year} AND {end_year};")
 
             res = cursor.fetchall()
             #for r in res:
@@ -582,7 +483,7 @@ class TerroristSQLDatabase:
             for i in res:
                 data.append(i)
 
-            df = pl.DataFrame(data, schema=["event","year","month","day","crit1","crit2","crit3","success","suicide","attacktype_id","attacktype","gname","individual","nkill","nwound","property","city_id","provstate_id","country_id","region_id","target_id"])
+            df = pl.DataFrame(data, schema=["year", "month", "day","region","country","provstate","city","target","targettype", "success","suicide","attacktype","gname","individual","nkill","nwound","property"])
             print(df)
             
         
@@ -600,8 +501,9 @@ if __name__ == '__main__':
     db = TerroristSQLDatabase(path)
     #db.populate_db(db.raw)
     #db.read_data('country')
-    db.get_num_events_all_countries()
-    #db.get_events_by_country(country_name='United States')
+    #db.get_num_events_all_countries()
+    #db.get_events_by_country(country_name='Norway')
     #db.get_events_by_region(region_name="Central Asia")
     #db.get_event_in_country_from_start_to_end(country_name="Norway",start_year=2011, end_year=2012)
+    db.get_events_with_criteria(country='Norway', start_year=1980, end_year=2012, attacktype='Bombing/Explosion', targettype='Government (General)', success=1)
     
