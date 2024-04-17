@@ -45,6 +45,11 @@ class TerroristSQLDatabase:
             pl.col("nwound").cast(pl.Float64),
             pl.col("property").cast(pl.Int64)
             )
+        
+        self.raw = self.raw.with_columns(
+            pl.col("nkill").cast(pl.Int64),
+            pl.col("nwound").cast(pl.Int64),
+        )
 
         try:
             conn = mysql.connector.connect(host=self.DB_HOST, 
@@ -407,14 +412,13 @@ class TerroristSQLDatabase:
                 #print(i[0])
                 try:
                     country = pycountry_convert.country_name_to_country_alpha3(i[0])
-                    print(country)
                     if country:
                         data.append([country, i[1], i[0]])
                 except:
                     continue
 
             df = pl.DataFrame(data, schema=["iso_alpha", "count", "country"])
-            print(df)
+            
         
         except Error as e:
             print(e)
@@ -423,7 +427,8 @@ class TerroristSQLDatabase:
             if conn is not None and conn.is_connected():
                 cursor.close()
                 conn.close()
-
+        return df
+    
     def get_events_by_country(self, country_name : str):
         conn = None
         try:
@@ -436,7 +441,7 @@ class TerroristSQLDatabase:
                     print('Connected to database, getting events by country')
         
             cursor = conn.cursor()
-            cursor.execute(f"SELECT year, SUM(nkill), COUNT(fact_id) FROM fact WHERE country='{country_name}' GROUP BY year;")
+            cursor.execute(f"SELECT year, CAST(SUM(nkill) AS UNSIGNED), COUNT(fact_id) FROM fact WHERE country='{country_name}' GROUP BY year;")
 
             res = cursor.fetchall()
             #for r in res:
@@ -446,11 +451,8 @@ class TerroristSQLDatabase:
 
             for i in res:
                 data.append(i)
-
-            df = pl.DataFrame(data, schema=["year", "nkill", "num_events"])
-            print(df)
+            df = pl.DataFrame(data, schema=["year", "nkill", "num_events"])          
             
-        
         except Error as e:
             print(e)
             
@@ -458,8 +460,9 @@ class TerroristSQLDatabase:
             if conn is not None and conn.is_connected():
                 cursor.close()
                 conn.close()
-        
-    def get_events_with_criteria(self, country=None, start_year=None, end_year=None, attacktype=None, targettype=None, success=None):
+        return df
+
+    def get_events_with_criteria(self, country=None, start_year=None, end_year=None, attack_type=None, target_type=None, success=None):
         # return dataframe with the events that matches
         conn = None
         try:
@@ -470,9 +473,25 @@ class TerroristSQLDatabase:
                                     password=self.DB_PASSWORD)
             if conn.is_connected():
                     print(f'Connected to database, getting events in {country} from {start_year} to {end_year}')
-        
+            
             cursor = conn.cursor()
-            cursor.execute(f"SELECT year, month, day, region, country, provstate, city, target, targettype, success, suicide, attacktype, gname, individual, nkill, nwound, property FROM fact WHERE country='{country}' AND attacktype='{attacktype}' AND targettype='{targettype}' AND success={success} AND year BETWEEN {start_year} AND {end_year};")
+
+            sql_query = "SELECT year, month, day, region, country, provstate, city, target, targettype, success, suicide, attacktype, gname, individual, nkill, nwound, property FROM fact WHERE 1=1"
+
+            if country is not None:
+                sql_query += f" AND country='{country}'"
+            if attack_type is not None:
+                sql_query += f" AND attacktype='{attack_type}'"
+            if target_type is not None:
+                sql_query += f" AND targettype='{target_type}'"
+            if success is not None:
+                sql_query += f" AND success={success}"
+            if start_year is not None:
+                sql_query += f" AND year >= {start_year}"
+            if end_year is not None:
+                sql_query += f" AND year <= {end_year}"
+            
+            cursor.execute(sql_query)
 
             res = cursor.fetchall()
             #for r in res:
@@ -484,7 +503,6 @@ class TerroristSQLDatabase:
                 data.append(i)
 
             df = pl.DataFrame(data, schema=["year", "month", "day","region","country","provstate","city","target","targettype", "success","suicide","attacktype","gname","individual","nkill","nwound","property"])
-            print(df)
             
         
         except Error as e:
@@ -494,7 +512,7 @@ class TerroristSQLDatabase:
             if conn is not None and conn.is_connected():
                 cursor.close()
                 conn.close()
-
+        return df
 
 if __name__ == '__main__':
     path = "/home/stiffi/Documents/master_2_sem/IKT453/project/stevensDW/data/terrorismdb_no_doubt.csv"
@@ -502,8 +520,10 @@ if __name__ == '__main__':
     #db.populate_db(db.raw)
     #db.read_data('country')
     #db.get_num_events_all_countries()
-    #db.get_events_by_country(country_name='Norway')
+    #df = db.get_events_by_country(country_name='United States')
     #db.get_events_by_region(region_name="Central Asia")
     #db.get_event_in_country_from_start_to_end(country_name="Norway",start_year=2011, end_year=2012)
-    db.get_events_with_criteria(country='Norway', start_year=1980, end_year=2012, attacktype='Bombing/Explosion', targettype='Government (General)', success=1)
+    #df =db.get_events_with_criteria(country='Norway', start_year=1980, end_year=2012, attacktype='Bombing/Explosion', targettype='Government (General)', success=1)
+    df = db.get_events_with_criteria(country='United States')
+    print(df)
     
