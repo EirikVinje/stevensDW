@@ -112,7 +112,7 @@ class TerroristNeo4JDatabase:
 
         with driver.session() as session:
 
-            for query in tqdm(queries, desc="Thread {} on {} queries".format(i, len(queries)), disable=True):
+            for query in tqdm(queries, desc="Thread {} on {} queries".format(i, len(queries)), disable=False):
                 session.run(query)
         
         driver.close()
@@ -175,7 +175,7 @@ class TerroristNeo4JDatabase:
 
         with driver.session() as session:
             
-            for i in tqdm(range(df.shape[0]), desc="inserting country nodes", disable=True):
+            for i in tqdm(range(df.shape[0]), desc="inserting country nodes", disable=False):
                 
                 if i == self.max_reads:
                     break
@@ -192,7 +192,7 @@ class TerroristNeo4JDatabase:
 
         with driver.session() as session:
 
-            for query in tqdm(queries, desc="Thread {} on {} queries".format(i, len(queries)), disable=True):
+            for query in tqdm(queries, desc="Thread {} on {} queries".format(i, len(queries)), disable=False):
                 session.run(query)
         
         driver.close()
@@ -203,7 +203,7 @@ class TerroristNeo4JDatabase:
         df = self.raw
         queries = []
         
-        for i in tqdm(range(df.shape[0]), desc="Creating queries", disable=True):
+        for i in tqdm(range(df.shape[0]), desc="Creating queries", disable=False):
             
             query = self._create_query("Event", ["event_id", "year", "month", "day", "country_id", "country", "region_id", "region", "provstate", "city", "crit1", "crit2", "crit3", "doubtterr", "success", "suicide", "attacktype_id", "attacktype", "targettype_id", "targettype", "target", "gname", "individual", "nkill", "nwound", "property"], df[i])
             queries.append(query)
