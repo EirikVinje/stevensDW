@@ -515,7 +515,7 @@ class TerroristSQLDatabase:
         return df
 
 if __name__ == '__main__':
-    path = "/home/stiffi/Documents/master_2_sem/IKT453/project/stevensDW/data/terrorismdb_no_doubt.csv"
+    path = "/data/terrorismdb_no_doubt.csv"
     db = TerroristSQLDatabase(path)
     #db.populate_db(db.raw)
     #db.read_data('country')
@@ -524,6 +524,6 @@ if __name__ == '__main__':
     #db.get_events_by_region(region_name="Central Asia")
     #db.get_event_in_country_from_start_to_end(country_name="Norway",start_year=2011, end_year=2012)
     #df =db.get_events_with_criteria(country='Norway', start_year=1980, end_year=2012, attacktype='Bombing/Explosion', targettype='Government (General)', success=1)
-    df = db.get_events_with_criteria(country='United States')
-    print(df)
+    #df = db.get_events_with_criteria(country='United States')
+    #print(df)
     
