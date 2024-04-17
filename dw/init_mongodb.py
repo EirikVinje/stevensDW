@@ -236,10 +236,14 @@ class TerroristMongoDBDatabase:
         if "year" in query and query["year"] == {"$gte": None, "$lte": None}:
             del query["year"]
 
-
+        # extract only these columns: year, month, day, region, country, provstate, city, target, targettype, success, suicide, attacktype, gname, nkill, nwound, individual, property
         result = list(db["events"].find(query))
         df = pl.DataFrame(result)
-        df = df.drop(["_id", "country_id", "region_id", "attacktype_id", "targettype_id"])
+        df = df.select(["year", "month", "day", "region", "country", "provstate", "city", "target","targettype","success","suicide","attacktype","gname","nkill","nwound","individual","property"])
+
+        # df = df.drop(["_id", "country_id", "region_id", "attacktype_id", "targettype_id"])
+        print(df.columns)
+        # extract only these columns: year, month, day, region, country, provstate, city, target, targettype, success, suicide, attacktype, gname, nkill, nwound, individual, property
         
         return df
 
@@ -257,6 +261,6 @@ if __name__ == "__main__":
     
     args = sys.argv[-1]
     
-    print(database.get_events_by_country("United States").sort("year"))
+    print(database.get_events_with_criteria("United States", 2001, 2001))
 
     
