@@ -6,6 +6,7 @@ from pymongo import MongoClient
 import polars as pl
 import numpy as np
 from dw.init_mongodb import TerroristMongoDBDatabase
+from dw.init_sql import TerroristSQLDatabase
 import dash_bootstrap_components as dbc
 
 
@@ -75,6 +76,10 @@ def get_geomap(DB):
         db = TerroristMongoDBDatabase("data/terrorismdb_no_doubt.csv")
         df = db.get_num_events_all_countries()
 
+    elif DB=='NoSQL':
+        db = TerroristSQLDatabase("data/terrorismdb_no_doubt.csv")
+        df = db.get_num_events_all_countries()
+
     else:
         assert False
 
@@ -119,6 +124,10 @@ def update_geograph(clickData, DB):
 
     if DB=='MongoDB':
         db = TerroristMongoDBDatabase("data/terrorismdb_no_doubt.csv")
+        df = db.get_events_by_country(clickCountry)
+
+    elif DB=='NoSQL':
+        db = TerroristSQLDatabase("data/terrorismdb_no_doubt.csv")
         df = db.get_events_by_country(clickCountry)
 
     else:
@@ -172,18 +181,25 @@ def update_geograph(clickData, DB):
 
 def get_dropdowns(DB):
 
-        if DB=='MongoDB':
-            db = TerroristMongoDBDatabase("data/terrorismdb_no_doubt.csv")
-            df = db.get_events_with_criteria()
+    if DB=='MongoDB':
+        db = TerroristMongoDBDatabase("data/terrorismdb_no_doubt.csv")
+        df = db.get_events_with_criteria()
 
-            children = [dbc.Col([dcc.Dropdown(options=list(df['country'].unique()), value='United States', id='dropdownCounty')], width=2),
-                        dbc.Col([dcc.Dropdown(placeholder='Start Year', id='dropdownSY')], width=2),
-                        dbc.Col([dcc.Dropdown(placeholder='End Year', id='dropdownEY')], width=2),
-                        dbc.Col([dcc.Dropdown(placeholder='Attack Type', id='dropdownAT')], width=2),
-                        dbc.Col([dcc.Dropdown(placeholder='Target Type',  id='dropdownTT')], width=2),
-                        dbc.Col([dcc.Dropdown(placeholder='Sucsess',  id='dropdownSucsess')], width=2)]
-        
-        return children, [dbc.Col(dcc.Dropdown(list(df.columns), list(df.columns)[0:5], multi=True, id='tableColumns'), width=6)]
+    elif DB=='NoSQL':
+        db = TerroristSQLDatabase("data/terrorismdb_no_doubt.csv")
+        df = db.get_events_with_criteria()
+
+    else:
+        assert False
+
+    children = [dbc.Col([dcc.Dropdown(options=list(df['country'].unique()), value='United States', id='dropdownCounty')], width=2),
+                dbc.Col([dcc.Dropdown(placeholder='Start Year', id='dropdownSY')], width=2),
+                dbc.Col([dcc.Dropdown(placeholder='End Year', id='dropdownEY')], width=2),
+                dbc.Col([dcc.Dropdown(placeholder='Attack Type', id='dropdownAT')], width=2),
+                dbc.Col([dcc.Dropdown(placeholder='Target Type',  id='dropdownTT')], width=2),
+                dbc.Col([dcc.Dropdown(placeholder='Sucsess',  id='dropdownSucsess')], width=2)]
+    
+    return children, [dbc.Col(dcc.Dropdown(list(df.columns), list(df.columns)[0:5], multi=True, id='tableColumns'), width=6)]
 
 
 
@@ -234,6 +250,10 @@ def update_dropdowns(DB, dropdownCounty, dropdownSY, dropdownEY, dropdownAT, dro
 
     if DB=='MongoDB':
         db = TerroristMongoDBDatabase("data/terrorismdb_no_doubt.csv")
+        df = db.get_events_with_criteria(country=dropdownCounty, start_year=dropdownSY, end_year=dropdownEY, attack_type=dropdownAT, target_type=dropdownTT, success=dropdownSucsess)
+
+    elif DB=='NoSQL':
+        db = TerroristSQLDatabase("data/terrorismdb_no_doubt.csv")
         df = db.get_events_with_criteria(country=dropdownCounty, start_year=dropdownSY, end_year=dropdownEY, attack_type=dropdownAT, target_type=dropdownTT, success=dropdownSucsess)
 
     else:

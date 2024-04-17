@@ -459,7 +459,7 @@ class TerroristSQLDatabase:
                 cursor.close()
                 conn.close()
         
-    def get_events_with_criteria(self, country, start_year, end_year, attacktype, targettype, success):
+    def get_events_with_criteria(self, country=None, start_year=None, end_year=None, attacktype=None, targettype=None, success=None):
         # return dataframe with the events that matches
         conn = None
         try:
