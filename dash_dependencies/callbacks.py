@@ -63,9 +63,9 @@ def update_geograph(clickData):
     db = TerroristMongoDBDatabase("data/terrorismdb_no_doubt.csv")
     df = db.get_events_by_country(clickCountry)
     
-    temp = df["year"].value_counts()
+    # temp = df["year"].value_counts()
 
-    fig1 = px.pie(temp, values='count', names='year', title=f'Terrorist attacks in {clickCountry} per year')
+    fig1 = px.pie(df, values='num_events', names='year', title=f'Terrorist attacks in {clickCountry} per year')
     fig1.update_traces(textposition='inside', textinfo='percent+label')
     fig1.update_layout(
             autosize=True,
