@@ -115,7 +115,7 @@ class TerroristNeo4JDatabase:
             return df
         
 
-    def get_events_with_criteria(self, country : str, start_year : int, end_year : int, attacktype : int, targettype : int, success : int):
+    def get_events_with_criteria(self, country : str, start_year : int, end_year : int, attacktype : str, targettype : str, success : int):
         
         driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
 
@@ -126,7 +126,7 @@ class TerroristNeo4JDatabase:
             query = f"""
                     MATCH (e:Event)
                     WHERE e.country = '{country}' AND e.year >= {start_year} AND e.year <= {end_year}
-                    AND e.attacktype_id = {attacktype} AND e.targettype_id = {targettype} AND e.success = {success}
+                    AND e.attacktype = '{attacktype}' AND e.targettype = '{targettype}' AND e.success = {success}
                     RETURN e.year as year, 
                            e.month as month, 
                            e.day as day, 
