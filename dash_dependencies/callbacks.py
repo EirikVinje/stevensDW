@@ -262,7 +262,7 @@ def update_dropdowns(DB, dropdownCounty, dropdownSY, dropdownEY, dropdownAT, dro
         df = SQLdb.get_events_with_criteria(country=dropdownCounty, start_year=dropdownSY, end_year=dropdownEY, attack_type=dropdownAT, target_type=dropdownTT, success=dropdownSucsess)
 
     elif DB=='Neo4J':
-        df = Noedb.get_events_with_criteria(country=dropdownCounty, start_year=dropdownSY, end_year=dropdownEY, attack_type=dropdownAT, target_type=dropdownTT, success=dropdownSucsess)
+        df = Noedb.get_events_with_criteria(country=dropdownCounty, start_year=dropdownSY, end_year=dropdownEY, attacktype=dropdownAT, targettype=dropdownTT, success=dropdownSucsess)
 
     else:
         assert False

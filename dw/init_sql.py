@@ -6,6 +6,7 @@ import polars as pl
 import numpy as np
 from tqdm import tqdm
 from mysql.connector import Error
+import os
 
 class TerroristSQLDatabase:
     def __init__(self, path):
@@ -515,7 +516,10 @@ class TerroristSQLDatabase:
         return df
 
 if __name__ == '__main__':
-    path = "/data/terrorismdb_no_doubt.csv"
+    
+    cwd = os.getcwd()
+
+    path = f"{cwd}/data/terrorismdb_no_doubt.csv"
     db = TerroristSQLDatabase(path)
     #db.populate_db(db.raw)
     #db.read_data('country')
