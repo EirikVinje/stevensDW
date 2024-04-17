@@ -4,6 +4,7 @@ import time
 import json
 import sys
 import gc
+import os
 
 from neo4j import GraphDatabase
 from tqdm import tqdm
@@ -236,7 +237,9 @@ class TerroristNeo4JDatabase:
 
 if __name__ == "__main__":
 
-    datapath = "/home/eirik/projects/stevensDW/data/terrorismdb_no_doubt.csv"
+
+    cwd = os.getcwd()
+    datapath = f"{cwd}/data/terrorismdb_no_doubt.csv"
     max_reads = -1
     db = TerroristNeo4JDatabase(datapath, max_reads)
     

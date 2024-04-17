@@ -7,6 +7,7 @@ import polars as pl
 import numpy as np
 from dw.init_mongodb import TerroristMongoDBDatabase
 from dw.init_sql import TerroristSQLDatabase
+from dw.read_neo4j import TerroristNeo4JDatabase
 import dash_bootstrap_components as dbc
 
 
@@ -80,6 +81,10 @@ def get_geomap(DB):
         db = TerroristSQLDatabase("data/terrorismdb_no_doubt.csv")
         df = db.get_num_events_all_countries()
 
+    elif DB=='Neo4J':
+        db = TerroristNeo4JDatabase()
+        df = db.get_num_events_all_countries()
+
     else:
         assert False
 
@@ -130,10 +135,14 @@ def update_geograph(clickData, DB):
         db = TerroristSQLDatabase("data/terrorismdb_no_doubt.csv")
         df = db.get_events_by_country(clickCountry)
 
+    elif DB=='Neo4J':
+        db = TerroristNeo4JDatabase()
+        df = db.get_events_by_country(clickCountry)
+
     else:
         assert False
     
-    # temp = df["year"].value_counts()
+    print(df)
 
     fig1 = px.pie(df, values='num_events', names='year', title=f'Terrorist attacks in {clickCountry} per year')
     fig1.update_traces(textposition='inside', textinfo='percent+label')
@@ -187,6 +196,10 @@ def get_dropdowns(DB):
 
     elif DB=='NoSQL':
         db = TerroristSQLDatabase("data/terrorismdb_no_doubt.csv")
+        df = db.get_events_with_criteria()
+
+    elif DB=='Neo4J':
+        db = TerroristNeo4JDatabase()
         df = db.get_events_with_criteria()
 
     else:
@@ -254,6 +267,10 @@ def update_dropdowns(DB, dropdownCounty, dropdownSY, dropdownEY, dropdownAT, dro
 
     elif DB=='NoSQL':
         db = TerroristSQLDatabase("data/terrorismdb_no_doubt.csv")
+        df = db.get_events_with_criteria(country=dropdownCounty, start_year=dropdownSY, end_year=dropdownEY, attack_type=dropdownAT, target_type=dropdownTT, success=dropdownSucsess)
+
+    elif DB=='Neo4J':
+        db = TerroristNeo4JDatabase()
         df = db.get_events_with_criteria(country=dropdownCounty, start_year=dropdownSY, end_year=dropdownEY, attack_type=dropdownAT, target_type=dropdownTT, success=dropdownSucsess)
 
     else:
