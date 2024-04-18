@@ -79,7 +79,7 @@ def get_geomap(DB):
     if DB=='MongoDB':
         df = Mongodb.get_num_events_all_countries()
 
-    elif DB=='NoSQL':
+    elif DB=='MySQL':
         df = SQLdb.get_num_events_all_countries()
 
     elif DB=='Neo4J':
@@ -130,7 +130,7 @@ def update_geograph(clickData, DB):
     if DB=='MongoDB':
         df = Mongodb.get_events_by_country(clickCountry)
 
-    elif DB=='NoSQL':
+    elif DB=='MySQL':
         df = SQLdb.get_events_by_country(clickCountry)
 
     elif DB=='Neo4J':
@@ -142,7 +142,7 @@ def update_geograph(clickData, DB):
     print(df)
 
     fig1 = px.pie(df, values='num_events', names='year', title=f'Terrorist attacks in {clickCountry} per year')
-    fig1.update_traces(textposition='inside', textinfo='percent+label')
+    fig1.update_traces(textposition='inside', textinfo='value+label')
     fig1.update_layout(
             autosize=True,
             margin = dict(
@@ -190,7 +190,7 @@ def get_dropdowns(DB):
     if DB=='MongoDB':
         df = Mongodb.get_events_with_criteria()
 
-    elif DB=='NoSQL':
+    elif DB=='MySQL':
         df = SQLdb.get_events_with_criteria()
 
     elif DB=='Neo4J':
@@ -258,7 +258,7 @@ def update_dropdowns(DB, dropdownCounty, dropdownSY, dropdownEY, dropdownAT, dro
     if DB=='MongoDB':
         df = Mongodb.get_events_with_criteria(country=dropdownCounty, start_year=dropdownSY, end_year=dropdownEY, attack_type=dropdownAT, target_type=dropdownTT, success=dropdownSucsess)
 
-    elif DB=='NoSQL':
+    elif DB=='MySQL':
         df = SQLdb.get_events_with_criteria(country=dropdownCounty, start_year=dropdownSY, end_year=dropdownEY, attack_type=dropdownAT, target_type=dropdownTT, success=dropdownSucsess)
 
     elif DB=='Neo4J':

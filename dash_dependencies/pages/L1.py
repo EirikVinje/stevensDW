@@ -36,7 +36,7 @@ layout = html.Div([
                     html.Div([
 
 
-                            dcc.RadioItems(['MongoDB', 'NoSQL','Neo4J'], inline=True, id='radioDB'),
+                            dcc.RadioItems(['MySQL','MongoDB','Neo4J'], inline=True, id='radioDB'),
                             html.Br(),
                             dbc.Row([
 
