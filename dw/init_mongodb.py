@@ -7,6 +7,7 @@ import threading
 import time
 import numpy as np
 import pycountry_convert
+import os
 
 
 
@@ -88,12 +89,8 @@ class TerroristMongoDBDatabase:
         client = MongoClient("mongodb://localhost:27017")
         db = client["mongodb_database"]
 
-        # extract country and country text, only unique by country
         countries = self.raw.unique(subset=["country"])
 
-        # get all provstates, regions and cities for each country and add as lists to the country in the collection 
-
-        
 
         data_dict = {}
 
@@ -116,7 +113,6 @@ class TerroristMongoDBDatabase:
                                         "region": [row["region"][0]],
                                         "city": [row["city"][0]]}
 
-        # print(data_dict)
 
         db["countries"].insert_many(data_dict.values())
 
@@ -124,7 +120,7 @@ class TerroristMongoDBDatabase:
         client.close()
 
     def _insert_all_events(self):
-        # insert all events with multithreading
+
 
         queries = []
 
@@ -136,8 +132,6 @@ class TerroristMongoDBDatabase:
                 data_dict[key] = row[key][0]
 
             queries.append(data_dict)
-
-        # print(len(queries))
 
 
         client = MongoClient("mongodb://localhost:27017")
@@ -236,14 +230,12 @@ class TerroristMongoDBDatabase:
         if "year" in query and query["year"] == {"$gte": None, "$lte": None}:
             del query["year"]
 
-        # extract only these columns: year, month, day, region, country, provstate, city, target, targettype, success, suicide, attacktype, gname, nkill, nwound, individual, property
         result = list(db["events"].find(query))
         df = pl.DataFrame(result)
         df = df.select(["year", "month", "day", "region", "country", "provstate", "city", "target","targettype","success","suicide","attacktype","gname","nkill","nwound","individual","property"])
 
-        # df = df.drop(["_id", "country_id", "region_id", "attacktype_id", "targettype_id"])
         print(df.columns)
-        # extract only these columns: year, month, day, region, country, provstate, city, target, targettype, success, suicide, attacktype, gname, nkill, nwound, individual, property
+       
         
         return df
 
@@ -255,12 +247,14 @@ class TerroristMongoDBDatabase:
 
 if __name__ == "__main__":
 
-    path = "../data/terrorismdb_no_doubt.csv"
+    cwd = os.getcwd()
+
+    path = f"{cwd}/data/terrorismdb_no_doubt.csv"
 
     database = TerroristMongoDBDatabase(path)
     
-    args = sys.argv[-1]
+    # args = sys.argv[-1]
     
-    print(database.get_events_with_criteria("United States", 2001, 2001))
+    # print(database.get_events_with_criteria("United States", 2001, 2001))
 
     
