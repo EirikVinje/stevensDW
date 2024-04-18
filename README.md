@@ -15,35 +15,16 @@
 $ cd stevensDW/
 $ sudo apt install docker-compose
 $ pip install -r requirements.txt
-$ cd dw/
-$ sudo docker-compose up -d
+$ ./dw/init_db.sh
 ```
 
-## To run MySQL database after docker-compose
-```rst
-sudo docker exec -it dw_mysql-odb-server_1 bash
-mysql -p
-secret
-CREATE USER 'dbuser'@'%' IDENTIFIED BY 'secret';
-GRANT ALL PRIVILEGES ON odb.* to 'dbuser'@'%';
-exit
-exit
-sudo docker exec -it dw_mysql-dw-server_1 bash
-mysql -p
-secret
-CREATE USER 'dbuser'@'%' IDENTIFIED BY 'secret';
-GRANT ALL PRIVILEGES ON dw.* to 'dbuser'@'%';
-exit
-exit
-python init_sql.py
-```
 
 ## In browser, access databases
 
 - Neo4j : localhost:7474
 - MySQL-odb : localhost:15000
 - MySQL-dw: localhost:25000
-- Mongodb : 
+- MongoDB has no web interface available
 
 
 ## Features available:
