@@ -1,16 +1,11 @@
 # The Stevens DataWareHouse
 
-## dependencies
-- sudo apt install docker-compose
-- pip install -r requirements.txt
-- terrorist dataset in csv
-
-## container commands 
-- sudo docker-compose up -d (runs the containers)
-- sudo docker-compose down -v (stops and removes the containers)
-
+This is the repo for our DW project.
 
 ## Run project
+
+Simple setup process, downloads all dependencies and sets up everything so that it works with the UI. If you have docker-compose installed already this step can be skipped.
+
 ```rst
 $ cd stevensDW/
 $ sudo apt install docker-compose
@@ -18,11 +13,13 @@ $ pip install -r requirements.txt
 $ ./init_db.sh
 ```
 
+Access UI at: localhost:8000
+
 
 
 
 ## User Manual
-After running the setup process, the program can be accessed at localhost:8000 in your browser. Where you will be presented with a map, 2 pie charts and a query area.
+After running the setup process, the program can be accessed at [localhost:8000](localhost:8000) in your browser. Where you will be presented with a map, 2 pie charts and a query area.
 
 To start the UI you first need to select which backend you would like to be using, MySQL, MongoDB or Neo4J. After doing so all the features of the UI will be working.
 
