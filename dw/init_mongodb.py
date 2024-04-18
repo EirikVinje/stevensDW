@@ -233,8 +233,6 @@ class TerroristMongoDBDatabase:
         result = list(db["events"].find(query))
         df = pl.DataFrame(result)
         df = df.select(["year", "month", "day", "region", "country", "provstate", "city", "target","targettype","success","suicide","attacktype","gname","nkill","nwound","individual","property"])
-
-        print(df.columns)
        
         
         return df

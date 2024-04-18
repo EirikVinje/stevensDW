@@ -78,11 +78,11 @@ class TerroristNeo4JDatabase:
 
             df = pl.DataFrame(df)
 
-            print(df)
+            # print(df)
 
             end_t = time.time()
             
-            print(f"Time to run query: {end_t - start_t}")
+            # print(f"Time to run query: {end_t - start_t}")
 
             return df
 
@@ -106,11 +106,11 @@ class TerroristNeo4JDatabase:
         
             df = pl.DataFrame([r.data() for r in result])
 
-            print(df)
+            # print(df)
 
             end_t = time.time()
 
-            print(f"Time to run query: {end_t - start_t}")
+            # print(f"Time to run query: {end_t - start_t}")
 
             return df
         
@@ -179,7 +179,7 @@ class TerroristNeo4JDatabase:
 
             end_t = time.time()
 
-            print(f"Time to run query: {end_t - start_t}")
+            # print(f"Time to run query: {end_t - start_t}")
 
             return df
 

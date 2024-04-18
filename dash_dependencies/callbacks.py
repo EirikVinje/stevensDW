@@ -139,7 +139,6 @@ def update_geograph(clickData, DB):
     else:
         assert False
     
-    print(df)
 
     fig1 = px.pie(df, values='num_events', names='year', title=f'Terrorist attacks in {clickCountry} per year')
     fig1.update_traces(textposition='inside', textinfo='value+label')
