@@ -1,15 +1,10 @@
 #!/bin/bash -e
 
-echo "Sudo password:"
-
-read -s password
-
-echo ""
 echo "Initializing databases mongo, neo4j and sql..."
 
 cd dw
-echo $password | sudo -S docker-compose up -d
-sleep 10
+sudo docker-compose up -d
+sleep 3
 cd ..
 
 
