@@ -1,4 +1,4 @@
-# The Stevens DataWareHouse
+# The Stevens Data Warehouse
 
 The Stevens submission for the Intelligent Data Management course project. A web-based interface for exploring the [Global Terrorism Database](https://www.start.umd.edu/gtd/), utilizing three different database systems for our backend.
 
