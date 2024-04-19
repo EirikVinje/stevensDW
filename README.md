@@ -1,4 +1,4 @@
-# The Stevens DataWareHouse
+# The Stevens Data Warehouse
 
 The Stevens submission for the Intelligent Data Management course project. A web-based interface for exploring the [Global Terrorism Database](https://www.start.umd.edu/gtd/), utilizing three different database systems for our backend.
 
@@ -16,9 +16,11 @@ $ ./init_containers.sh
 $ ./init_db.sh
 ```
 
-Access UI in your browser at: localhost:8000
+After doing this you can start the UI using the command below, the UI can then be accessed at localhost:8000 in the web browser on your machine.
 
-
+```rst
+$ python app.py
+```
 
 
 ## User Manual
