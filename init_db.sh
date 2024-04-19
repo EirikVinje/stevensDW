@@ -1,12 +1,6 @@
 #!/bin/bash -e
 
-echo "Initializing databases mongo, neo4j and sql..."
-
-cd dw
-sudo docker-compose up -d
-sleep 10
-cd ..
-
+echo "Populating databases mongo, neo4j and sql..."
 
 dbpass="secret"
 dbuser="dbuser"
@@ -21,9 +15,19 @@ echo "Created MySQL users"
 
 
 echo ""
-echo "Initializing databases"
+echo "Initializing Neo4J"
 python dw/init_neo4j.py all
+sleep 3
+
+echo "Initializing MongoDB"
 python dw/init_mongodb.py 
+sleep 3
+
+echo "Initializing MySQL"
 python dw/init_sql.py
+sleep 3
+
+
+clear
 
 echo "Done!"
