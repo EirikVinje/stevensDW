@@ -24,7 +24,7 @@ $ python app.py
 
 
 ## User Manual
-After running the setup process, the program can be accessed at [localhost:8000](localhost:8000) in your browser. Where you will be presented with a map, two pie-charts and a query area.
+After running the setup process, the program can be accessed at **localhost:8000** in your browser. Where you will be presented with a map, two pie-charts and a query area.
 
 To be able to use the UI you first need to select which backend you would like to be using, MySQL, MongoDB or Neo4J. After doing so, the heatmap, pie-charts and query area will be populated and usable.
 
@@ -47,7 +47,7 @@ You also here have the options to decide which columns you want to see in the ta
 
 ## Remove docker containers for databases
 
-If you wish to remove the databases and their containers, you can run the following command from the stevensDW directory. **NOTE:** You will need to run the entire setup process again if you wish to use the databases again.
+If you wish to remove the databases and their containers, you can run the following command from the stevensDW directory. **NOTE:** You will need to run the last two lines of the startup process again if you want to use the program again.
 
 ```rst
 $ ./remove_db.sh
