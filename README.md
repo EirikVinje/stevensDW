@@ -61,6 +61,8 @@ $ ./remove_db.sh
 
 ## In browser, access databases
 
+Both the MySQL and Neo4J databases can be accessed directtly in the browser aswell, this will show all the information and require knowledge of how to query the database etc. If you only wish to browse the dataset going to either of these pages will not be necessary.
+
 - Neo4j : localhost:7474
 - MySQL-odb : localhost:15000
 - MySQL-dw: localhost:25000
