@@ -27,8 +27,8 @@ layout = html.Div([
 
                     dbc.Row([
 
-                            dbc.Col(dcc.Graph(figure=geomap, id='geomap', config = {'scrollZoom':False}), width=8, className='geomapSpace', style={'border':'1px solid black'}),
-                            dbc.Col(html.Div([dcc.Graph(figure=pie1, id='geograph1'), dcc.Graph(figure=pie2, id='geograph2')]), width={"size": 4,"offset": 8}, className='geographSpace')    
+                            dbc.Col(dcc.Graph(figure=geomap, id='geomap', config = {'scrollZoom':False, 'displayModeBar': False}, ), width=8, className='geomapSpace', style={'border':'1px solid black'}),
+                            dbc.Col(html.Div([dcc.Graph(figure=pie1, config = {'scrollZoom':False, 'displayModeBar': False}, id='geograph1', style={'border':'1x solid black', 'z-index':'3'}), dcc.Graph(figure=pie2, config = {'scrollZoom':False, 'displayModeBar': False}, id='geograph2')]), width={"size": 3,"offset": 9}, className='geographSpace')    
 
                             ], className='geoSpace'),
 
