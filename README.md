@@ -2,16 +2,21 @@
 
 The Stevens submission for the Intelligent Data Management course project. A web-based interface for exploring the [Global Terrorism Database](https://www.start.umd.edu/gtd/), utilizing three different database systems for our backend.
 
+## Dependencies
+
+To run the project, both docker-compose and certain python libraries are required, these can be installed on linux/MacOS using the following commands.
+
+```rst
+$ sudo apt install docker-compose
+$ pip install -r requirements.txt
+```
+
 ## Run project
 
-Simple setup process, downloads all dependencies and sets up everything so that it works with the UI. If you have docker-compose installed already this step can be skipped.
-
-When running the init_containers.sh file, you may be asked for your sudo password, this is necessary to start the docker containers. init_db.sh populates your databases, this will only work after the containers have been initialized.
+Simple setup process. When running the init_containers.sh file, you may be asked for your sudo password, this is necessary to start the docker containers. init_db.sh populates your databases, this will only work **after** the containers have been initialized.
 
 ```rst
 $ cd stevensDW/
-$ sudo apt install docker-compose
-$ pip install -r requirements.txt
 $ ./init_containers.sh
 $ ./init_db.sh
 ```
