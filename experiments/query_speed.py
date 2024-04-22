@@ -31,7 +31,10 @@ def query_speed():
         {"country":"Norway",
          "start_year":2001,
          "end_year":2011,
-         "attack_type":"Bombing/Explosion"}
+         "attack_type":"Bombing/Explosion"},
+        {"start_year":1980,
+         "end_year":2010},
+        {"target_type":"Private Citizens & Property"}
     ]
 
     for query in queries:
@@ -54,6 +57,17 @@ def query_speed():
     print(f"MongoDB: {mongo_times}")
     print(f"SQL: {sql_times}")
     print(f"Neo4J: {neo4j_times}")
+
+    # median times
+    print(f"MongoDB median time: {sorted(mongo_times)[len(mongo_times)//2]}")
+    print(f"SQL median time: {sorted(sql_times)[len(sql_times)//2]}")
+    print(f"Neo4J median time: {sorted(neo4j_times)[len(neo4j_times)//2]}")
+
+    #average times
+    print(f"MongoDB average time: {sum(mongo_times)/len(mongo_times)}")
+    print(f"SQL average time: {sum(sql_times)/len(sql_times)}")
+    print(f"Neo4J average time: {sum(neo4j_times)/len(neo4j_times)}")
+
 
 
 if __name__ == "__main__":

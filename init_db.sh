@@ -16,15 +16,15 @@ echo "Created MySQL users"
 
 echo ""
 echo "Initializing Neo4J"
-python dw/init_neo4j.py all
+time python dw/init_neo4j.py all
 sleep 3
 
 echo "Initializing MongoDB"
-python dw/init_mongodb.py 
+time python dw/init_mongodb.py 
 sleep 3
 
 echo "Initializing MySQL"
-python dw/init_sql.py
+time python dw/init_sql.py
 sleep 3
 
 
