@@ -115,9 +115,9 @@ class TerroristNeo4JDatabase:
             return df
         
 
-    def get_events_with_criteria(self, country : str = None, start_year : int = None, end_year : int = None, attacktype : str = None, targettype : str = None, success : int = None):
+    def get_events_with_criteria(self, country : str = None, start_year : int = None, end_year : int = None, attack_type : str = None, target_type : str = None, success : int = None):
         
-        constraints = [country, attacktype, targettype, success]
+        constraints = [country, attack_type, target_type, success]
         constraints_str = ["country", "attacktype", "targettype", "success"]
 
         driver = GraphDatabase.driver(self.uri, auth=(self.username, self.password))
