@@ -28,6 +28,4 @@ python dw/init_sql.py
 sleep 3
 
 
-clear
-
 echo "Done!"

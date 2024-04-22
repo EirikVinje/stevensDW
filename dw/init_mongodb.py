@@ -60,12 +60,6 @@ class TerroristMongoDBDatabase:
             self._create_collection("events")
             self._insert_all_events()
 
-        try:
-            db.validate_collection("countries")
-        except:
-            print("Countries collection not found, creating...")
-            self._create_collection("countries")
-            self._insert_countries()
 
 
 
@@ -82,42 +76,7 @@ class TerroristMongoDBDatabase:
         
         client.close()
             
-    
 
-    def _insert_countries(self):
-
-        client = MongoClient("mongodb://localhost:27017")
-        db = client["mongodb_database"]
-
-        countries = self.raw.unique(subset=["country"])
-
-
-        data_dict = {}
-
-        for i in range(self.raw.shape[0]):
-            row = self.raw[i]
-
-            if row["country_id"][0] in data_dict:
-                # print('yo')
-                if row["provstate"][0] not in data_dict[row["country_id"][0]]["provstate"]:
-                    data_dict[row["country_id"][0]]["provstate"].append(row["provstate"][0])
-                if row["region"][0] not in data_dict[row["country_id"][0]]["region"]:
-                    data_dict[row["country_id"][0]]["region"].append(row["region"][0])
-                if row["city"][0] not in data_dict[row["country_id"][0]]["city"]:
-                    data_dict[row["country_id"][0]]["city"].append(row["city"][0])
-
-            else:
-                data_dict[row["country_id"][0]] = {"countryid": row["country_id"][0],
-                                        "country": row["country"][0],
-                                        "provstate": [row["provstate"][0]],
-                                        "region": [row["region"][0]],
-                                        "city": [row["city"][0]]}
-
-
-        db["countries"].insert_many(data_dict.values())
-
-
-        client.close()
 
     def _insert_all_events(self):
 

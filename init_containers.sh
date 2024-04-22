@@ -7,6 +7,4 @@ sudo docker-compose up -d
 sleep 15
 cd ..
 
-clear
-
 echo "Done!"
