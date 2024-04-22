@@ -36,34 +36,24 @@ def init_geomap():
     fig1 = px.pie()
     fig1.update_traces(textposition='inside', textinfo='percent+label')
     fig1.update_layout(
-            autosize=True,
-            margin = dict(
-                    l=0,
-                    r=0,
-                    b=0,
-                    t=50,
-                ),
-                width=600,
-                height=340,
+                autosize=False,
+                width=450,
+                height=450,
                 showlegend=False,
-                uniformtext_minsize=10, uniformtext_mode='hide',
-                legend=dict(font=dict(size=12)))
+                # uniformtext_minsize=10, uniformtext_mode='hide',
+                # legend=dict(font=dict(size=12))
+                )
     
     fig2 = px.pie()
     fig2.update_traces(textposition='inside', textinfo='value+label')
     fig2.update_layout(
-            autosize=True,
-            margin = dict(
-                    l=0,
-                    r=0,
-                    b=0,
-                    t=50,
-                ),
-                width=600,
-                height=340,
+                autosize=False,
+                width=450,
+                height=450,
                 showlegend=False,
-                uniformtext_minsize=10, uniformtext_mode='hide',
-                legend=dict(font=dict(size=12)))
+                # uniformtext_minsize=10, uniformtext_mode='hide',
+                # legend=dict(font=dict(size=12))
+                )
 
     
     return fig, fig1, fig2
@@ -140,7 +130,7 @@ def update_geograph(clickData, DB):
         assert False
     
 
-    fig1 = px.pie(df, values='num_events', names='year', title=f'Terrorist attacks in {clickCountry} per year')
+    fig1 = px.pie(df, values='num_events', names='year', title=f'Terrorist attacks in {clickCountry}')
     fig1.update_traces(textposition='inside', textinfo='value+label')
     fig1.update_layout(
             autosize=True,
@@ -150,13 +140,13 @@ def update_geograph(clickData, DB):
                     b=0,
                     t=50,
                 ),
-                width=600,
+                width=300,
                 height=340,
                 showlegend=False,
                 uniformtext_minsize=10, uniformtext_mode='hide',
                 legend=dict(font=dict(size=12)))
     
-    fig2 = px.pie(df, values='nkill', names='year', title=f'People killed (%) in {clickCountry} per year')
+    fig2 = px.pie(df, values='nkill', names='year', title=f'People killed in {clickCountry}')
     fig2.update_traces(textposition='inside', textinfo='value+label')
     fig2.update_layout(
             autosize=True,
@@ -166,7 +156,7 @@ def update_geograph(clickData, DB):
                     b=0,
                     t=50,
                 ),
-                width=600,
+                width=300,
                 height=340,
                 showlegend=False,
                 uniformtext_minsize=10, uniformtext_mode='hide',

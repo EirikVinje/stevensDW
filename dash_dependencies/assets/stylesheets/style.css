@@ -79,7 +79,7 @@ header h1{
     z-index: 2;
     box-shadow: rgba(0, 0, 0, 0.55) 0px 0px 100px 10px;
     border: 1px solid rgb(228, 228, 228);
-    height: 50vh;
+    height: 80vh;
     width: 99.5vw;
     padding: 50px;
     background-color: rgb(228, 228, 228);
@@ -90,7 +90,7 @@ header h1{
 
 .tableSpace {
     width: 95.5vw;
-    height: 30vh;
+    height: 50vh;
     overflow-y: scroll;
     overflow-x: scroll;
     align-items: center;
@@ -100,10 +100,13 @@ header h1{
 
 .geographSpace{
     position: absolute;
+    overflow-x: hidden;
+    overflow-y: hidden;
     background-color: rgb(255, 255, 255);
     z-index: 1;
-    height: 70vh;
-    width: 25vw;
+    height: 65vh;
+    width: 17.3vw;
+
 }
 
 .geomapSpace {
@@ -112,4 +115,14 @@ header h1{
     z-index: 0;
     width: 99vw;
 
+}
+
+.loadingStyle2 {
+    position: absolute;
+    top: 10vh;
+}
+
+.loadingStyle1 {
+    position: absolute;
+    top: 30vh;
 }
