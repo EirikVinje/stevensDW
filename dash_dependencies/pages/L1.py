@@ -24,16 +24,17 @@ layout = html.Div([
 
                     ], id='headerSpace'),
                     
-
-                    dbc.Row([
+        
+                    dbc.Row(dcc.Loading([
 
                             dbc.Col(dcc.Graph(figure=geomap, id='geomap', config = {'scrollZoom':False, 'displayModeBar': False}, ), width=8, className='geomapSpace', style={'border':'1px solid black'}),
-                            dbc.Col(html.Div([dcc.Graph(figure=pie1, config = {'scrollZoom':False, 'displayModeBar': False}, id='geograph1', style={'border':'1x solid black', 'z-index':'3'}), dcc.Graph(figure=pie2, config = {'scrollZoom':False, 'displayModeBar': False}, id='geograph2')]), width={"size": 3,"offset": 9}, className='geographSpace')    
+                            dbc.Col(html.Div([dcc.Graph(figure=pie1, config = {'displayModeBar': False}, id='geograph1'), dcc.Graph(figure=pie2, config = {'displayModeBar': False}, id='geograph2')]), width={"size": 2,"offset": 10}, className='geographSpace')    
 
-                            ], className='geoSpace'),
+                            ], className='loadingStyle1'), className='geoSpace'),
 
 
-                    html.Div([
+                    html.Div(dcc.Loading([
+                        
 
 
                             dcc.RadioItems(['MySQL','MongoDB','Neo4J'], inline=True, id='radioDB'),
@@ -50,7 +51,7 @@ layout = html.Div([
 
                             html.Div(id='queryTable', className='tableSpace')
 
-                            ], className='inputSpace'),
+                            ], className='loadingStyle2'), className='inputSpace'),
 
                     
                         
