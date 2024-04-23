@@ -25,15 +25,15 @@ layout = html.Div([
                     ], id='headerSpace'),
                     
         
-                    dbc.Row(dcc.Loading([
+                    dbc.Row([
 
                             dbc.Col(dcc.Graph(figure=geomap, id='geomap', config = {'scrollZoom':False, 'displayModeBar': False}, ), width=8, className='geomapSpace', style={'border':'1px solid black'}),
                             dbc.Col(html.Div([dcc.Graph(figure=pie1, config = {'displayModeBar': False}, id='geograph1'), dcc.Graph(figure=pie2, config = {'displayModeBar': False}, id='geograph2')]), width={"size": 2,"offset": 10}, className='geographSpace')    
 
-                            ], className='loadingStyle1'), className='geoSpace'),
+                            ], className='geoSpace'),
 
 
-                    html.Div(dcc.Loading([
+                    html.Div([
                         
 
 
@@ -45,13 +45,17 @@ layout = html.Div([
                             
                             html.Br(),
 
-                            dbc.Row(id='tableDropdown'),
+                            dbc.Row(
+                                [dbc.Col(id='tableDropdown', width=6),
+                                dbc.Col(html.H1(id='tableCount'), width={"size": 3, "offset": 3})]
+
+                                ),
 
                             html.Br(),
 
-                            html.Div(id='queryTable', className='tableSpace')
+                            dcc.Loading(html.Div(id='queryTable', className='tableSpace'), className='loadingStyle2')
 
-                            ], className='loadingStyle2'), className='inputSpace'),
+                            ], className='inputSpace'),
 
                     
                         

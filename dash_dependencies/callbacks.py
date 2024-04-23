@@ -130,6 +130,8 @@ def update_geograph(clickData, DB):
         assert False
     
 
+
+
     fig1 = px.pie(df, values='num_events', names='year', title=f'Terrorist attacks in {clickCountry}')
     fig1.update_traces(textposition='inside', textinfo='value+label')
     fig1.update_layout(
@@ -193,9 +195,9 @@ def get_dropdowns(DB):
                 dbc.Col([dcc.Dropdown(placeholder='End Year', id='dropdownEY')], width=2),
                 dbc.Col([dcc.Dropdown(placeholder='Attack Type', id='dropdownAT')], width=2),
                 dbc.Col([dcc.Dropdown(placeholder='Target Type',  id='dropdownTT')], width=2),
-                dbc.Col([dcc.Dropdown(placeholder='Sucsess',  id='dropdownSucsess')], width=2)]
+                dbc.Col([dcc.Dropdown(placeholder='Success',  id='dropdownSucsess')], width=2)]
     
-    return children, [dbc.Col(dcc.Dropdown(list(df.columns), list(df.columns)[0:5], multi=True, id='tableColumns'), width=6)]
+    return children, [dcc.Dropdown(list(df.columns), ['country', 'city', 'year', 'month', 'day', 'attacktype', 'nkill', 'target'], multi=True, id='tableColumns')]
 
 
 
@@ -221,6 +223,7 @@ def update_dropdown_from_geo(clickData):
 
 @callback(
         Output('queryTable', 'children'),
+        Output('tableCount', 'children'),
         
         Output('dropdownSY', 'options'),
         Output('dropdownEY', 'options'),
@@ -266,7 +269,7 @@ def update_dropdowns(DB, dropdownCounty, dropdownSY, dropdownEY, dropdownAT, dro
     sucsess_range = df['success'].unique()
 
 
-    return dash_table.DataTable(dff.to_dict('records'), [{"name": i, "id": i} for i in dff.columns], fill_width=True), list(years_range), list(years_range), list(at_range), list(tt_range), list(sucsess_range)
+    return dash_table.DataTable(dff.to_dict('records'), [{"name": i, "id": i} for i in dff.columns], fill_width=True, style_cell={'textAlign': 'left'},), f'Number of events: {len(dff)}', list(years_range), list(years_range), list(at_range), list(tt_range), list(sucsess_range)
 
 
 

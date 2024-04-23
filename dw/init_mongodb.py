@@ -175,7 +175,7 @@ class TerroristMongoDBDatabase:
         db = client["mongodb_database"]
 
         if start_year != None and end_year == None:
-            end_year = start_year
+            end_year = 2020
 
 
         query = {"country": country, 
